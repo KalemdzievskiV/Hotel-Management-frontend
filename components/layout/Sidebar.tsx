@@ -19,6 +19,11 @@ const navigationItems: NavItem[] = [
     icon: '📊',
   },
   {
+    name: 'Calendar',
+    href: '/dashboard/calendar',
+    icon: '📅',
+  },
+  {
     name: 'Hotels',
     href: '/dashboard/hotels',
     icon: '🏨',
@@ -31,7 +36,7 @@ const navigationItems: NavItem[] = [
   {
     name: 'Reservations',
     href: '/dashboard/reservations',
-    icon: '📅',
+    icon: '📋',
   },
   {
     name: 'Guests',

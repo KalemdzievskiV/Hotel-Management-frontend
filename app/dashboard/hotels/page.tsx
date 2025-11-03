@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useHotels, useDeleteHotel } from '@/hooks/useHotels';
+import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/Toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,8 +32,11 @@ import { formatDate } from '@/lib/utils/date';
 export default function HotelsPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const { user } = useAuthStore();
   const { data: hotels, isLoading, error } = useHotels();
   const deleteHotel = useDeleteHotel();
+  
+  const isSuperAdmin = user?.roles.includes('SuperAdmin');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -108,6 +112,7 @@ export default function HotelsPage() {
                     <TableHead>Hotel</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Rating</TableHead>
+                    {isSuperAdmin && <TableHead>Owner</TableHead>}
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -137,6 +142,11 @@ export default function HotelsPage() {
                           ))}
                         </div>
                     </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell>
+                        <div className="text-sm text-gray-900">{hotel.ownerName || 'N/A'}</div>
+                      </TableCell>
+                    )}
                     <TableCell>
                         <Badge 
                           variant={hotel.isActive ? "default" : "secondary"}

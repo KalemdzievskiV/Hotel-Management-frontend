@@ -326,73 +326,289 @@ export default function EditGuestPage() {
             </CardContent>
           </Card>
 
-          {/* Status */}
+          {/* Identification */}
           <Card>
             <CardHeader>
-              <CardTitle>Status & Preferences</CardTitle>
+              <CardTitle>Identification</CardTitle>
             </CardHeader>
             <CardContent>
-            <div className="flex flex-wrap gap-6">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isVIP"
-                  name="isVIP"
-                  checked={formData.isVIP}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isVIP: checked as boolean }))}
-                />
-                <Label htmlFor="isVIP" className="font-medium cursor-pointer">VIP ⭐</Label>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="identificationType">Identification Type</Label>
+                  <Select
+                    name="identificationType"
+                    value={formData.identificationType}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, identificationType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Passport">Passport</SelectItem>
+                      <SelectItem value="DriverLicense">Driver's License</SelectItem>
+                      <SelectItem value="NationalID">National ID</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isActive"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked as boolean }))}
-                />
-                <Label htmlFor="isActive" className="font-medium cursor-pointer">Active</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="identificationNumber">Identification Number</Label>
+                  <Input
+                    id="identificationNumber"
+                    name="identificationNumber"
+                    value={formData.identificationNumber}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="emailNotifications"
-                  name="emailNotifications"
-                  checked={formData.emailNotifications}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, emailNotifications: checked as boolean }))}
-                />
-                <Label htmlFor="emailNotifications" className="cursor-pointer">Email Notifications</Label>
-              </div>
+          {/* Address */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Address</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="address">Street Address</Label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                  />
+                </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="smsNotifications"
-                  name="smsNotifications"
-                  checked={formData.smsNotifications}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, smsNotifications: checked as boolean }))}
-                />
-                <Label htmlFor="smsNotifications" className="cursor-pointer">SMS Notifications</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="state">State/Province</Label>
+                  <Input
+                    id="state"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Postal Code</Label>
+                  <Input
+                    id="postalCode"
+                    name="postalCode"
+                    value={formData.postalCode}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+
+          {/* Emergency Contact */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Emergency Contact</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactName">Contact Name</Label>
+                  <Input
+                    id="emergencyContactName"
+                    name="emergencyContactName"
+                    value={formData.emergencyContactName}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactPhone">Contact Phone</Label>
+                  <Input
+                    id="emergencyContactPhone"
+                    type="tel"
+                    name="emergencyContactPhone"
+                    value={formData.emergencyContactPhone}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactRelationship">Relationship</Label>
+                  <Input
+                    id="emergencyContactRelationship"
+                    name="emergencyContactRelationship"
+                    value={formData.emergencyContactRelationship}
+                    onChange={handleChange}
+                    placeholder="e.g., Spouse, Parent"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Preferences & Special Requests */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Preferences & Special Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="preferredLanguage">Preferred Language</Label>
+                  <Input
+                    id="preferredLanguage"
+                    name="preferredLanguage"
+                    value={formData.preferredLanguage}
+                    onChange={handleChange}
+                    placeholder="e.g., English, Spanish"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="loyaltyProgramNumber">Loyalty Program Number</Label>
+                  <Input
+                    id="loyaltyProgramNumber"
+                    name="loyaltyProgramNumber"
+                    value={formData.loyaltyProgramNumber}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="specialRequests">Special Requests</Label>
+                  <Textarea
+                    id="specialRequests"
+                    name="specialRequests"
+                    value={formData.specialRequests}
+                    onChange={handleChange}
+                    rows={3}
+                    placeholder="Any special requests or requirements..."
+                  />
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="preferences">Preferences</Label>
+                  <Textarea
+                    id="preferences"
+                    name="preferences"
+                    value={formData.preferences}
+                    onChange={handleChange}
+                    rows={2}
+                    placeholder="Room preferences, dietary restrictions, etc."
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="isVIP"
+                        checked={formData.isVIP}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isVIP: checked as boolean }))}
+                      />
+                      <Label htmlFor="isVIP" className="cursor-pointer">VIP Guest</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="isActive"
+                        checked={formData.isActive}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked as boolean }))}
+                      />
+                      <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="emailNotifications"
+                        checked={formData.emailNotifications}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, emailNotifications: checked as boolean }))}
+                      />
+                      <Label htmlFor="emailNotifications" className="cursor-pointer">Email Notifications</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="smsNotifications"
+                        checked={formData.smsNotifications}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, smsNotifications: checked as boolean }))}
+                      />
+                      <Label htmlFor="smsNotifications" className="cursor-pointer">SMS Notifications</Label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Business Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="taxId">Tax ID</Label>
+                  <Input
+                    id="taxId"
+                    name="taxId"
+                    value={formData.taxId}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
           {/* Notes */}
           <Card>
             <CardHeader>
-              <CardTitle>Notes</CardTitle>
+              <CardTitle>Internal Notes</CardTitle>
             </CardHeader>
             <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                rows={3}
-                placeholder="Internal notes"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Internal notes about the guest (not visible to guest)"
+                />
+              </div>
             </CardContent>
           </Card>
 

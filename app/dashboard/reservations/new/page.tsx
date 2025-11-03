@@ -61,20 +61,27 @@ export default function NewReservationPage() {
     }
   }, [formData.roomId, rooms]);
 
-  // Calculate total amount
+  // Calculate total amount and auto-fill duration for short stays
   useEffect(() => {
     if (selectedRoom && formData.checkInDate && formData.checkOutDate) {
       const checkIn = new Date(formData.checkInDate);
       const checkOut = new Date(formData.checkOutDate);
-      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
       
-      if (formData.bookingType === BookingType.Daily && nights > 0) {
-        setCalculatedAmount(nights * selectedRoom.pricePerNight);
-      } else if (formData.bookingType === BookingType.ShortStay && formData.durationInHours) {
-        setCalculatedAmount(formData.durationInHours * (selectedRoom.shortStayHourlyRate || 0));
+      if (formData.bookingType === BookingType.Daily) {
+        const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+        if (nights > 0) {
+          setCalculatedAmount(nights * selectedRoom.pricePerNight);
+        }
+      } else if (formData.bookingType === BookingType.ShortStay) {
+        // Auto-calculate duration in hours
+        const hours = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60));
+        if (hours > 0) {
+          setFormData(prev => ({ ...prev, durationInHours: hours }));
+          setCalculatedAmount(hours * (selectedRoom.shortStayHourlyRate || 0));
+        }
       }
     }
-  }, [selectedRoom, formData.checkInDate, formData.checkOutDate, formData.bookingType, formData.durationInHours]);
+  }, [selectedRoom, formData.checkInDate, formData.checkOutDate, formData.bookingType]);
 
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof CreateReservationDto, string>> = {};
@@ -91,8 +98,19 @@ export default function NewReservationPage() {
     if (formData.checkInDate && formData.checkOutDate) {
       const checkIn = new Date(formData.checkInDate);
       const checkOut = new Date(formData.checkOutDate);
-      if (checkOut <= checkIn) {
-        newErrors.checkOutDate = 'Check-out must be after check-in';
+      
+      if (formData.bookingType === BookingType.ShortStay) {
+        // For short stays, allow same-day but check-out time must be after check-in time
+        if (checkOut <= checkIn) {
+          newErrors.checkOutDate = 'Check-out time must be after check-in time';
+        }
+      } else {
+        // For overnight stays, check-out must be on a later date
+        if (checkOut.toDateString() === checkIn.toDateString()) {
+          newErrors.checkOutDate = 'Check-out date must be after check-in date for overnight stays';
+        } else if (checkOut <= checkIn) {
+          newErrors.checkOutDate = 'Check-out must be after check-in';
+        }
       }
     }
 
@@ -282,30 +300,45 @@ export default function NewReservationPage() {
               <CardTitle>Dates & Duration</CardTitle>
             </CardHeader>
             <CardContent>
+            {formData.bookingType === BookingType.ShortStay && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  ℹ️ For short stays, please select both date and time for check-in and check-out (e.g., 10:00 AM to 2:00 PM)
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="checkInDate">Check-in Date *</Label>
+                <Label htmlFor="checkInDate">
+                  Check-in {formData.bookingType === BookingType.ShortStay ? 'Date & Time' : 'Date'} *
+                </Label>
                 <Input
                   id="checkInDate"
-                  type="date"
+                  type={formData.bookingType === BookingType.ShortStay ? 'datetime-local' : 'date'}
                   name="checkInDate"
                   value={formData.checkInDate}
                   onChange={handleChange}
-                  min={new Date().toISOString().split('T')[0]}
+                  min={formData.bookingType === BookingType.ShortStay 
+                    ? new Date().toISOString().slice(0, 16) 
+                    : new Date().toISOString().split('T')[0]}
                   className={errors.checkInDate ? 'border-red-500' : ''}
                 />
                 {errors.checkInDate && <p className="text-sm text-red-600">{errors.checkInDate}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="checkOutDate">Check-out Date *</Label>
+                <Label htmlFor="checkOutDate">
+                  Check-out {formData.bookingType === BookingType.ShortStay ? 'Date & Time' : 'Date'} *
+                </Label>
                 <Input
                   id="checkOutDate"
-                  type="date"
+                  type={formData.bookingType === BookingType.ShortStay ? 'datetime-local' : 'date'}
                   name="checkOutDate"
                   value={formData.checkOutDate}
                   onChange={handleChange}
-                  min={formData.checkInDate || new Date().toISOString().split('T')[0]}
+                  min={formData.checkInDate || (formData.bookingType === BookingType.ShortStay 
+                    ? new Date().toISOString().slice(0, 16) 
+                    : new Date().toISOString().split('T')[0])}
                   className={errors.checkOutDate ? 'border-red-500' : ''}
                 />
                 {errors.checkOutDate && <p className="text-sm text-red-600">{errors.checkOutDate}</p>}
@@ -322,8 +355,10 @@ export default function NewReservationPage() {
                     onChange={handleChange}
                     min="1"
                     max="24"
-                    className={errors.durationInHours ? 'border-red-500' : ''}
+                    readOnly
+                    className={`bg-gray-50 ${errors.durationInHours ? 'border-red-500' : ''}`}
                   />
+                  <p className="text-xs text-gray-500">Auto-calculated from check-in and check-out times</p>
                   {errors.durationInHours && <p className="text-sm text-red-600">{errors.durationInHours}</p>}
                 </div>
               )}

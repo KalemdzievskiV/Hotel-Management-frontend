@@ -48,12 +48,20 @@ apiClient.interceptors.response.use(
       }
       
       if (status === 403) {
-        // Forbidden
-        console.error('Access forbidden');
+        // Forbidden - redirect to dashboard
+        console.warn('Access forbidden - redirecting to dashboard');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/dashboard';
+        }
+        return Promise.reject(error);
       }
       
       if (status === 404) {
-        console.error('Resource not found');
+        // Only log 404 if it's not a stats endpoint (those might not be implemented yet)
+        const url = error.config?.url || '';
+        if (!url.includes('/stats/')) {
+          console.error('Resource not found:', url);
+        }
       }
       
       if (status >= 500) {

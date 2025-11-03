@@ -3,19 +3,23 @@
 import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useHotel } from '@/hooks/useHotels';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { formatDate } from '@/lib/utils/date';
+import { User } from 'lucide-react';
 
 export default function ViewHotelPage() {
   const router = useRouter();
   const params = useParams();
   const hotelId = parseInt(params.id as string);
+  const { user } = useAuthStore();
   
   const { data: hotel, isLoading, error } = useHotel(hotelId);
+  const isSuperAdmin = user?.roles.includes('SuperAdmin');
 
   if (error) {
     return (
@@ -68,6 +72,34 @@ export default function ViewHotelPage() {
             {hotel.isActive ? '✓ Active' : '✗ Inactive'}
           </Badge>
         </div>
+
+        {/* Owner Information (SuperAdmin only) */}
+        {isSuperAdmin && hotel.ownerName && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-900">
+                <User className="h-5 w-5" />
+                Owner Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label className="text-blue-600">
+                    Owner Name
+                  </Label>
+                  <p className="text-blue-900 font-medium">{hotel.ownerName}</p>
+                </div>
+                <div>
+                  <Label className="text-blue-600">
+                    Owner ID
+                  </Label>
+                  <p className="text-blue-900 font-mono text-sm">{hotel.ownerId}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Basic Information */}
         <Card>
@@ -297,15 +329,6 @@ export default function ViewHotelPage() {
                   Last Updated
                 </Label>
                 <p className="text-gray-900">{formatDate(hotel.updatedAt)}</p>
-              </div>
-            )}
-
-            {hotel.ownerName && (
-              <div>
-                <Label className="text-gray-500">
-                  Owner
-                </Label>
-                <p className="text-gray-900">{hotel.ownerName}</p>
               </div>
             )}
           </div>
