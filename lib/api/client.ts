@@ -48,12 +48,10 @@ apiClient.interceptors.response.use(
       }
       
       if (status === 403) {
-        // Forbidden - redirect to dashboard
-        console.warn('Access forbidden - redirecting to dashboard');
-        if (typeof window !== 'undefined') {
-          window.location.href = '/dashboard';
-        }
-        return Promise.reject(error);
+        // Forbidden - log but don't redirect (let the component handle it)
+        console.warn('Access forbidden:', error.config?.url);
+        // Don't auto-redirect on 403 - this can cause loops
+        // Components should handle 403 errors appropriately
       }
       
       if (status === 404) {

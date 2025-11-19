@@ -38,6 +38,7 @@ export default function NewHotelPage() {
     amenities: '',
     checkInTime: '14:00',
     checkOutTime: '11:00',
+    bufferTimeHours: 3,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CreateHotelDto, string>>>({});
@@ -79,7 +80,7 @@ export default function NewHotelPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'stars' ? parseInt(value) : value,
+      [name]: name === 'stars' || name === 'bufferTimeHours' ? parseInt(value) : value,
     }));
     // Clear error for this field
     if (errors[name as keyof CreateHotelDto]) {
@@ -277,7 +278,7 @@ export default function NewHotelPage() {
               <CardTitle>Check-in/Check-out</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="checkInTime">Check-in Time</Label>
                   <Input
@@ -298,6 +299,20 @@ export default function NewHotelPage() {
                     value={formData.checkOutTime}
                     onChange={handleChange}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bufferTimeHours">Cleaning Buffer (hours)</Label>
+                  <Input
+                    id="bufferTimeHours"
+                    type="number"
+                    name="bufferTimeHours"
+                    min="0"
+                    max="24"
+                    value={formData.bufferTimeHours}
+                    onChange={handleChange}
+                  />
+                  <p className="text-xs text-gray-500">Time needed between guests for cleaning</p>
                 </div>
               </div>
             </CardContent>

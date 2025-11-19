@@ -5,8 +5,28 @@ import {
   UpdateReservationDto,
   RecordPaymentDto,
   CancelReservationDto,
-  ReservationStatus 
+  ReservationStatus,
+  BookingType,
+  Room
 } from '@/types';
+
+export interface AvailableRoomsParams {
+  hotelId: number;
+  checkIn: string;
+  checkOut: string;
+  bookingType?: BookingType;
+  minCapacity?: number;
+  roomType?: string;
+}
+
+export interface AvailableRoomsResponse {
+  hotelId: number;
+  checkIn: string;
+  checkOut: string;
+  bookingType: BookingType;
+  totalAvailable: number;
+  rooms: Room[];
+}
 
 export const reservationsApi = {
   // GET /api/Reservations
@@ -88,6 +108,21 @@ export const reservationsApi = {
     return response.data;
   },
 
+  // GET /api/Reservations/available-rooms
+  getAvailableRooms: async (params: AvailableRoomsParams): Promise<AvailableRoomsResponse> => {
+    const response = await apiClient.get<AvailableRoomsResponse>('/Reservations/available-rooms', {
+      params: {
+        hotelId: params.hotelId,
+        checkIn: params.checkIn,
+        checkOut: params.checkOut,
+        bookingType: params.bookingType ?? 0,
+        minCapacity: params.minCapacity,
+        roomType: params.roomType,
+      },
+    });
+    return response.data;
+  },
+
   // GET /api/Reservations/room/{roomId}/conflicts
   getConflicts: async (
     roomId: number,
@@ -163,6 +198,18 @@ export const reservationsApi = {
   // GET /api/Reservations/stats/by-month/{year}
   getMonthlyStats: async (year: number): Promise<Record<string, number>> => {
     const response = await apiClient.get<Record<string, number>>(`/Reservations/stats/by-month/${year}`);
+    return response.data;
+  },
+
+  // GET /api/Reservations/today/check-ins
+  getTodaysCheckIns: async (): Promise<Reservation[]> => {
+    const response = await apiClient.get<Reservation[]>('/Reservations/today/check-ins');
+    return response.data;
+  },
+
+  // GET /api/Reservations/today/check-outs
+  getTodaysCheckOuts: async (): Promise<Reservation[]> => {
+    const response = await apiClient.get<Reservation[]>('/Reservations/today/check-outs');
     return response.data;
   },
 };

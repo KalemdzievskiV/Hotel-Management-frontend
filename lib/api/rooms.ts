@@ -1,6 +1,39 @@
 import apiClient from './client';
 import { Room, CreateRoomDto, UpdateRoomDto, RoomStatus } from '@/types';
 
+export interface RoomStatusSummary {
+  totalRooms: number;
+  statusBreakdown: Array<{
+    status: RoomStatus;
+    statusName: string;
+    count: number;
+  }>;
+}
+
+export interface OccupancyRate {
+  totalRooms: number;
+  occupiedRooms: number;
+  reservedRooms: number;
+  effectivelyOccupied: number;
+  availableRooms: number;
+  occupancyRate: number;
+}
+
+export interface DailyOccupancy {
+  date: string;
+  occupiedRooms: number;
+  totalRooms: number;
+  occupancyRate: number;
+}
+
+export interface OccupancyTrends {
+  currentOccupancy: number;
+  thisMonthAverage: number;
+  lastMonthAverage: number;
+  totalRooms: number;
+  dailyOccupancy: DailyOccupancy[];
+}
+
 export const roomsApi = {
   // GET /api/Rooms
   getAll: async (): Promise<Room[]> => {
@@ -70,6 +103,26 @@ export const roomsApi = {
   // GET /api/Rooms/stats/count
   getCount: async (): Promise<number> => {
     const response = await apiClient.get<number>('/Rooms/stats/count');
+    return response.data;
+  },
+
+  // GET /api/Rooms/stats/status-summary
+  getStatusSummary: async (): Promise<RoomStatusSummary> => {
+    const response = await apiClient.get<RoomStatusSummary>('/Rooms/stats/status-summary');
+    return response.data;
+  },
+
+  // GET /api/Rooms/stats/occupancy-rate
+  getOccupancyRate: async (): Promise<OccupancyRate> => {
+    const response = await apiClient.get<OccupancyRate>('/Rooms/stats/occupancy-rate');
+    return response.data;
+  },
+
+  // GET /api/Rooms/stats/occupancy-trends
+  getOccupancyTrends: async (days: number = 30): Promise<OccupancyTrends> => {
+    const response = await apiClient.get<OccupancyTrends>('/Rooms/stats/occupancy-trends', {
+      params: { days }
+    });
     return response.data;
   },
 };

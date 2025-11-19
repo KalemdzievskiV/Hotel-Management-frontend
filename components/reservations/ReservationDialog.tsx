@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useCreateReservation, useUpdateReservation, useDeleteReservation, useConfirmReservation, useCheckIn, useCheckOut, useCancelReservation } from '@/hooks/useReservations';
 import { useHotels } from '@/hooks/useHotels';
 import { useRoomsByHotel } from '@/hooks/useRooms';
-import { useGuests, useCreateGuest } from '@/hooks/useGuests';
+import { useGuests, useCreateGuest, useMyGuestProfile } from '@/hooks/useGuests';
+import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/Toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,8 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CreateReservationDto, UpdateReservationDto, BookingType, PaymentMethod, ReservationStatus, CreateGuestDto } from '@/types';
-import { Calendar, Clock, User, Home, DollarSign, AlertCircle, Check, X, LogIn, LogOut, UserPlus } from 'lucide-react';
+import { CreateReservationDto, UpdateReservationDto, BookingType, PaymentMethod, ReservationStatus, CreateGuestDto, Room } from '@/types';
+import { Calendar, Clock, User, Home, DollarSign, AlertCircle, Check, X, LogIn, LogOut, UserPlus, Search } from 'lucide-react';
+import { AvailabilityCalendar } from './AvailabilityCalendar';
 
 type DialogMode = 'create' | 'edit' | 'view';
 
@@ -49,6 +51,7 @@ export default function ReservationDialog({
   onSuccess,
 }: ReservationDialogProps) {
   const { showToast } = useToast();
+  const { user } = useAuthStore();
   const createReservation = useCreateReservation();
   const updateReservation = useUpdateReservation();
   const deleteReservation = useDeleteReservation();
@@ -60,10 +63,21 @@ export default function ReservationDialog({
   
   const { data: hotels } = useHotels();
   const { data: guests } = useGuests();
+  
+  // Auto-fetch guest profile for guest users
+  const isGuestUser = user?.roles.includes('Guest');
+  const { data: myGuestProfile } = useMyGuestProfile();
 
   const [isEditing, setIsEditing] = useState(mode === 'create' || mode === 'edit');
   const [selectedHotelId, setSelectedHotelId] = useState<number>(0);
   const { data: rooms } = useRoomsByHotel(selectedHotelId || undefined);
+  
+  // Check if reservation is completed (only notes/admin fields can be edited)
+  const isCompletedReservation = reservation && (
+    reservation.status === ReservationStatus.CheckedOut ||
+    reservation.status === ReservationStatus.Cancelled ||
+    reservation.status === ReservationStatus.NoShow
+  );
   
   // Walk-in guest state
   const [isWalkInMode, setIsWalkInMode] = useState(false);
@@ -73,6 +87,9 @@ export default function ReservationDialog({
     email: '',
     phoneNumber: '',
   });
+  
+  // Availability search mode
+  const [useAvailabilitySearch, setUseAvailabilitySearch] = useState(false);
 
   const [formData, setFormData] = useState<CreateReservationDto>({
     hotelId: 0,
@@ -93,8 +110,22 @@ export default function ReservationDialog({
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [calculatedAmount, setCalculatedAmount] = useState<number>(0);
 
+  // Helper to format date for datetime-local input without timezone conversion
+  const formatDateTimeLocal = (date: string | Date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   // Initialize form data based on mode
   useEffect(() => {
+    // Reset editing state based on mode
+    setIsEditing(mode === 'create' || mode === 'edit');
+    
     if (mode === 'create') {
       const dateStr = initialDate ? initialDate.toISOString().split('T')[0] : '';
       
@@ -121,8 +152,8 @@ export default function ReservationDialog({
         roomId: reservation.roomId,
         guestId: reservation.guestId,
         bookingType: reservation.bookingType,
-        checkInDate: new Date(reservation.checkInDate).toISOString().slice(0, 16),
-        checkOutDate: new Date(reservation.checkOutDate).toISOString().slice(0, 16),
+        checkInDate: formatDateTimeLocal(reservation.checkInDate),
+        checkOutDate: formatDateTimeLocal(reservation.checkOutDate),
         numberOfGuests: reservation.numberOfGuests,
         depositAmount: reservation.depositAmount || 0,
         paymentMethod: reservation.paymentMethod,
@@ -165,6 +196,18 @@ export default function ReservationDialog({
     }
   }, [selectedRoom, formData.checkInDate, formData.checkOutDate, formData.bookingType]);
 
+  const handleRoomSelectFromAvailability = (room: Room) => {
+    setFormData(prev => ({
+      ...prev,
+      hotelId: room.hotelId,
+      roomId: room.id,
+    }));
+    setSelectedHotelId(room.hotelId);
+    setSelectedRoom(room);
+    setUseAvailabilitySearch(false); // Switch back to form view
+    showToast(`Room ${room.roomNumber} selected`, 'success');
+  };
+
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof CreateReservationDto | keyof CreateGuestDto, string>> = {};
 
@@ -180,7 +223,8 @@ export default function ReservationDialog({
         newErrors.email = 'Invalid email format';
       }
       if (!walkInGuestData.phoneNumber?.trim()) newErrors.phoneNumber = 'Phone number is required';
-    } else if (!formData.guestId) {
+    } else if (!isGuestUser && !formData.guestId) {
+      // Only require guest selection for staff users (not for guest users who auto-use their profile)
       newErrors.guestId = 'Guest is required';
     }
     if (!formData.checkInDate) newErrors.checkInDate = 'Check-in date is required';
@@ -236,8 +280,12 @@ export default function ReservationDialog({
     try {
       let guestId = formData.guestId;
       
-      // If walk-in mode, create the guest first
-      if (isWalkInMode && mode === 'create') {
+      // For guest users, automatically use their profile
+      if (isGuestUser && myGuestProfile && mode === 'create') {
+        guestId = myGuestProfile.id;
+      }
+      // If walk-in mode (staff creating for guest), create the guest first
+      else if (isWalkInMode && mode === 'create') {
         const newGuest = await createGuest.mutateAsync({
           ...walkInGuestData,
           hotelId: formData.hotelId, // Associate with the selected hotel
@@ -249,20 +297,30 @@ export default function ReservationDialog({
       if (mode === 'create') {
         await createReservation.mutateAsync({
           ...formData,
-          guestId, // Use the walk-in guest ID or selected guest ID
+          guestId, // Use guest profile ID, walk-in guest ID, or selected guest ID
         });
         showToast('Reservation created successfully', 'success');
-      } else if (mode === 'edit') {
+      } else if (mode === 'edit' || (mode === 'view' && isEditing)) {
+        // Handle both explicit edit mode and edit from view mode
         await updateReservation.mutateAsync({
           id: reservation.id,
           data: formData as UpdateReservationDto,
         });
         showToast('Reservation updated successfully', 'success');
+        setIsEditing(false); // Reset editing state after successful update
       }
       onSuccess?.();
       onOpenChange(false);
     } catch (error: any) {
-      showToast(error.message || 'An error occurred', 'error');
+      // Extract error message from axios error response
+      const errorMessage = error?.response?.data?.message 
+        || error?.response?.data?.title 
+        || error?.response?.data 
+        || error?.message 
+        || 'An error occurred while creating the reservation';
+      
+      showToast(errorMessage, 'error');
+      console.error('Reservation error:', error);
     }
   };
 
@@ -275,7 +333,8 @@ export default function ReservationDialog({
       onSuccess?.();
       onOpenChange(false);
     } catch (error: any) {
-      showToast(error.message || 'Failed to delete reservation', 'error');
+      const errorMessage = error?.response?.data?.message || error?.response?.data?.title || error?.message || 'Failed to delete reservation';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -286,7 +345,8 @@ export default function ReservationDialog({
       showToast('Reservation confirmed', 'success');
       onSuccess?.();
     } catch (error: any) {
-      showToast(error.message || 'Failed to confirm', 'error');
+      const errorMessage = error?.response?.data?.message || error?.response?.data?.title || error?.message || 'Failed to confirm reservation';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -297,7 +357,8 @@ export default function ReservationDialog({
       showToast('Guest checked in', 'success');
       onSuccess?.();
     } catch (error: any) {
-      showToast(error.message || 'Failed to check in', 'error');
+      const errorMessage = error?.response?.data?.message || error?.response?.data?.title || error?.message || 'Failed to check in';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -308,18 +369,23 @@ export default function ReservationDialog({
       showToast('Guest checked out', 'success');
       onSuccess?.();
     } catch (error: any) {
-      showToast(error.message || 'Failed to check out', 'error');
+      const errorMessage = error?.response?.data?.message || error?.response?.data?.title || error?.message || 'Failed to check out';
+      showToast(errorMessage, 'error');
     }
   };
 
   const handleCancel = async () => {
     if (!reservation || !confirm('Are you sure you want to cancel this reservation?')) return;
     try {
-      await cancelReservation.mutateAsync(reservation.id);
+      await cancelReservation.mutateAsync({ 
+        id: reservation.id, 
+        data: { reason: 'Cancelled by user' }
+      });
       showToast('Reservation cancelled', 'success');
       onSuccess?.();
     } catch (error: any) {
-      showToast(error.message || 'Failed to cancel', 'error');
+      const errorMessage = error?.response?.data?.message || error?.response?.data?.title || error?.message || 'Failed to cancel reservation';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -489,7 +555,37 @@ export default function ReservationDialog({
           {/* Edit/Create Mode - Form */}
           {(mode === 'create' || mode === 'edit' || isEditing) && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Warning for completed reservations */}
+              {isCompletedReservation && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800">
+                    ℹ️ This reservation is completed. Only notes, special requests, and payment reference can be edited.
+                  </p>
+                </div>
+              )}
+              
+              {/* Hotel & Room - with Availability Search Toggle */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Room Selection</Label>
+                  {mode === 'create' && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setUseAvailabilitySearch(!useAvailabilitySearch);
+                        setErrors({});
+                      }}
+                      className="text-xs h-7"
+                    >
+                      <Search className="h-3 w-3 mr-1" />
+                      {useAvailabilitySearch ? 'Manual Selection' : 'Search Available'}
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Hotel Selector - Always Visible */}
                 <div>
                   <Label htmlFor="hotel">Hotel *</Label>
                   <Select
@@ -499,6 +595,7 @@ export default function ReservationDialog({
                       setFormData({ ...formData, hotelId, roomId: 0 });
                       setSelectedHotelId(hotelId);
                     }}
+                    disabled={isCompletedReservation}
                   >
                     <SelectTrigger className={errors.hotelId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select hotel" />
@@ -514,79 +611,105 @@ export default function ReservationDialog({
                   {errors.hotelId && <p className="text-xs text-red-500 mt-1">{errors.hotelId}</p>}
                 </div>
 
-                <div>
-                  <Label htmlFor="room">Room *</Label>
-                  <Select
-                    value={formData.roomId?.toString()}
-                    onValueChange={(value) => setFormData({ ...formData, roomId: parseInt(value) })}
-                    disabled={!selectedHotelId}
-                  >
-                    <SelectTrigger className={errors.roomId ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select room" />
-                    </SelectTrigger>
-                    <SelectContent position="popper" sideOffset={5}>
-                      {rooms?.map(room => (
-                        <SelectItem key={room.id} value={room.id.toString()}>
-                          Room {room.roomNumber} - {room.type} (${room.pricePerNight}/night, Cap: {room.capacity})
-                          {room.allowsShortStay && ' ⏰'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedRoom && (
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
-                      <span>Capacity: {selectedRoom.capacity} guests</span>
-                      {selectedRoom.allowsShortStay && (
-                        <span className="text-purple-600">• Short-stay available</span>
-                      )}
+                {/* Room Selection - Toggle between Calendar and Dropdown */}
+                {useAvailabilitySearch ? (
+                  /* Availability Calendar View */
+                  formData.hotelId ? (
+                    <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                      <AvailabilityCalendar
+                        hotelId={formData.hotelId}
+                        defaultCheckIn={formData.checkInDate}
+                        defaultCheckOut={formData.checkOutDate}
+                        defaultBookingType={formData.bookingType}
+                        onRoomSelect={handleRoomSelectFromAvailability}
+                        selectedRoomId={formData.roomId || undefined}
+                        compact={true}
+                      />
                     </div>
-                  )}
-                  {errors.roomId && <p className="text-xs text-red-500 mt-1">{errors.roomId}</p>}
-                </div>
-              </div>
-
-              {/* Guest Selection or Walk-in */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="guest">Guest *</Label>
-                  {mode === 'create' && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setIsWalkInMode(!isWalkInMode);
-                        setErrors({});
-                      }}
-                      className="text-xs h-7"
-                    >
-                      <UserPlus className="h-3 w-3 mr-1" />
-                      {isWalkInMode ? 'Select Existing' : 'Walk-in Guest'}
-                    </Button>
-                  )}
-                </div>
-                
-                {!isWalkInMode ? (
-                  // Existing Guest Selection
-                  <>
+                  ) : (
+                    <div className="border rounded-lg p-8 bg-gray-50 text-center">
+                      <p className="text-gray-500">Please select a hotel first to search available rooms</p>
+                    </div>
+                  )
+                ) : (
+                  /* Manual Room Dropdown */
+                  <div>
+                    <Label htmlFor="room">Room *</Label>
                     <Select
-                      value={formData.guestId?.toString()}
-                      onValueChange={(value) => setFormData({ ...formData, guestId: parseInt(value) })}
+                      value={formData.roomId?.toString()}
+                      onValueChange={(value) => setFormData({ ...formData, roomId: parseInt(value) })}
+                      disabled={!selectedHotelId || isCompletedReservation}
                     >
-                      <SelectTrigger className={errors.guestId ? 'border-red-500' : ''}>
-                        <SelectValue placeholder="Select guest" />
+                      <SelectTrigger className={errors.roomId ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Select room" />
                       </SelectTrigger>
                       <SelectContent position="popper" sideOffset={5}>
-                        {guests?.map(guest => (
-                          <SelectItem key={guest.id} value={guest.id.toString()}>
-                            {guest.firstName} {guest.lastName} - {guest.email}
+                        {rooms?.map(room => (
+                          <SelectItem key={room.id} value={room.id.toString()}>
+                            Room {room.roomNumber} (${room.pricePerNight}/night, Cap: {room.capacity})
+                            {room.allowsShortStay && ' ⏰'}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    {errors.guestId && <p className="text-xs text-red-500 mt-1">{errors.guestId}</p>}
-                  </>
-                ) : (
+                    {selectedRoom && (
+                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
+                        <span>Capacity: {selectedRoom.capacity} guests</span>
+                        {selectedRoom.allowsShortStay && (
+                          <span className="text-purple-600">• Short-stay available</span>
+                        )}
+                      </div>
+                    )}
+                    {errors.roomId && <p className="text-xs text-red-500 mt-1">{errors.roomId}</p>}
+                  </div>
+                )}
+              </div>
+
+              {/* Guest Selection or Walk-in */}
+              {!isGuestUser ? (
+                // Staff users: Show guest selector or walk-in form
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="guest">Guest *</Label>
+                    {mode === 'create' && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setIsWalkInMode(!isWalkInMode);
+                          setErrors({});
+                        }}
+                        className="text-xs h-7"
+                      >
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        {isWalkInMode ? 'Select Existing' : 'Walk-in Guest'}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {!isWalkInMode ? (
+                    // Existing Guest Selection
+                    <>
+                      <Select
+                        value={formData.guestId?.toString()}
+                        onValueChange={(value) => setFormData({ ...formData, guestId: parseInt(value) })}
+                        disabled={isCompletedReservation}
+                      >
+                        <SelectTrigger className={errors.guestId ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Select guest" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" sideOffset={5}>
+                          {guests?.map(guest => (
+                            <SelectItem key={guest.id} value={guest.id.toString()}>
+                              {guest.firstName} {guest.lastName} - {guest.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.guestId && <p className="text-xs text-red-500 mt-1">{errors.guestId}</p>}
+                    </>
+                  ) : (
                   // Walk-in Guest Quick Form
                   <div className="space-y-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
                     <div className="flex items-start gap-2">
@@ -650,7 +773,22 @@ export default function ReservationDialog({
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
+              ) : (
+                // Guest users: Show info that they're booking for themselves
+                <div className="space-y-2">
+                  <Label>Booking As</Label>
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md flex items-start gap-2">
+                    <User className="h-4 w-4 text-green-600 mt-0.5" />
+                    <div className="text-sm text-green-800">
+                      <p className="font-semibold">
+                        {myGuestProfile ? `${myGuestProfile.firstName} ${myGuestProfile.lastName}` : user?.fullName}
+                      </p>
+                      <p className="text-xs">{myGuestProfile?.email || user?.email}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="bookingType">Booking Type *</Label>
@@ -687,6 +825,7 @@ export default function ReservationDialog({
                     value={formData.checkInDate}
                     onChange={(e) => setFormData({ ...formData, checkInDate: e.target.value })}
                     className={errors.checkInDate ? 'border-red-500' : ''}
+                    disabled={isCompletedReservation}
                   />
                   {errors.checkInDate && <p className="text-xs text-red-500 mt-1">{errors.checkInDate}</p>}
                 </div>
@@ -699,6 +838,7 @@ export default function ReservationDialog({
                     value={formData.checkOutDate}
                     onChange={(e) => setFormData({ ...formData, checkOutDate: e.target.value })}
                     className={errors.checkOutDate ? 'border-red-500' : ''}
+                    disabled={isCompletedReservation}
                   />
                   {errors.checkOutDate && <p className="text-xs text-red-500 mt-1">{errors.checkOutDate}</p>}
                 </div>
@@ -715,6 +855,7 @@ export default function ReservationDialog({
                     value={formData.numberOfGuests}
                     onChange={(e) => setFormData({ ...formData, numberOfGuests: parseInt(e.target.value) })}
                     className={errors.numberOfGuests ? 'border-red-500' : ''}
+                    disabled={isCompletedReservation}
                   />
                   {selectedRoom && (
                     <p className="text-xs text-gray-500 mt-1">
@@ -796,8 +937,18 @@ export default function ReservationDialog({
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleSubmit}>
-                  {mode === 'create' ? 'Create Reservation' : 'Save Changes'}
+                <Button 
+                  onClick={handleSubmit}
+                  disabled={createReservation.isPending || updateReservation.isPending}
+                >
+                  {(createReservation.isPending || updateReservation.isPending) ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      {mode === 'create' ? 'Creating...' : 'Saving...'}
+                    </>
+                  ) : (
+                    mode === 'create' ? 'Create Reservation' : 'Save Changes'
+                  )}
                 </Button>
               </>
             )}

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useRooms, useDeleteRoom } from '@/hooks/useRooms';
+import { useRooms, useDeleteRoom, useUpdateRoomStatus, useMarkRoomCleaned } from '@/hooks/useRooms';
 import { useHotels } from '@/hooks/useHotels';
 import { useToast } from '@/components/ui/Toast';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -34,8 +40,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Room, RoomTypeLabels, RoomStatusLabels } from '@/types';
+import { Room, RoomTypeLabels, RoomStatusLabels, RoomStatus } from '@/types';
 import { formatDate } from '@/lib/utils/date';
+import { MoreVertical, CheckCircle } from 'lucide-react';
 
 export default function RoomsPage() {
   const router = useRouter();
@@ -43,6 +50,8 @@ export default function RoomsPage() {
   const { data: rooms, isLoading, error } = useRooms();
   const { data: hotels } = useHotels();
   const deleteRoom = useDeleteRoom();
+  const updateRoomStatus = useUpdateRoomStatus();
+  const markRoomCleaned = useMarkRoomCleaned();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedHotelId, setSelectedHotelId] = useState<string>('all');
@@ -67,6 +76,24 @@ export default function RoomsPage() {
       setDeleteConfirm(null);
     } catch (error: any) {
       showToast(error.response?.data?.message || 'Failed to delete room', 'error');
+    }
+  };
+
+  const handleStatusChange = async (roomId: number, newStatus: RoomStatus) => {
+    try {
+      await updateRoomStatus.mutateAsync({ id: roomId, status: newStatus });
+      showToast(`Room status updated to ${RoomStatusLabels[newStatus]}`, 'success');
+    } catch (error: any) {
+      showToast(error.response?.data?.message || 'Failed to update room status', 'error');
+    }
+  };
+
+  const handleMarkCleaned = async (roomId: number) => {
+    try {
+      await markRoomCleaned.mutateAsync(roomId);
+      showToast('Room marked as cleaned', 'success');
+    } catch (error: any) {
+      showToast(error.response?.data?.message || 'Failed to mark room as cleaned', 'error');
     }
   };
 
@@ -209,12 +236,25 @@ export default function RoomsPage() {
                         )}
                     </TableCell>
                     <TableCell>
-                        <Badge className={getStatusBadgeColor(RoomStatusLabels[room.status])}>
-                          {RoomStatusLabels[room.status]}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getStatusBadgeColor(RoomStatusLabels[room.status])}>
+                            {RoomStatusLabels[room.status]}
+                          </Badge>
+                          {room.status === RoomStatus.Cleaning && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMarkCleaned(room.id)}
+                              className="h-6 px-2 text-xs border-green-300 text-green-700 hover:bg-green-50"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Mark Clean
+                            </Button>
+                          )}
+                        </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="space-x-2">
+                      <div className="flex items-center justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -231,14 +271,41 @@ export default function RoomsPage() {
                         >
                           Edit
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteConfirm(room.id)}
-                          className="text-red-600 hover:text-red-900 hover:bg-red-50"
-                        >
-                          Delete
-                        </Button>
+                        
+                        {/* Status Dropdown */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Available)}>
+                              Set Available
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Occupied)}>
+                              Set Occupied
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Cleaning)}>
+                              Set Cleaning
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Maintenance)}>
+                              Set Maintenance
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.OutOfService)}>
+                              Set Out of Service
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Reserved)}>
+                              Set Reserved
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setDeleteConfirm(room.id)}
+                              className="text-red-600"
+                            >
+                              Delete Room
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>

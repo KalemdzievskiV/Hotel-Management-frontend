@@ -37,6 +37,12 @@ export const guestsApi = {
     return response.data;
   },
 
+  // GET /api/Guests/me - Get or create guest profile for current user
+  getMyProfile: async (): Promise<Guest> => {
+    const response = await apiClient.get<Guest>('/Guests/me');
+    return response.data;
+  },
+
   // GET /api/Guests/hotel/{hotelId}
   getByHotel: async (hotelId: number): Promise<Guest[]> => {
     const response = await apiClient.get<Guest[]>(`/Guests/hotel/${hotelId}`);

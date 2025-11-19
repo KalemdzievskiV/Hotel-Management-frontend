@@ -31,6 +31,7 @@ export interface Hotel {
   // Business
   checkInTime?: string;
   checkOutTime?: string;
+  bufferTimeHours: number;
   
   // Status
   isActive: boolean;
@@ -58,6 +59,7 @@ export interface CreateHotelDto {
   amenities?: string;
   checkInTime?: string;
   checkOutTime?: string;
+  bufferTimeHours?: number;
 }
 
 export interface UpdateHotelDto extends Partial<CreateHotelDto> {

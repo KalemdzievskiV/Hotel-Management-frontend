@@ -3,61 +3,114 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { ROLES } from '@/lib/constants';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface NavItem {
   name: string;
   href: string;
   icon: string;
-  roles?: string[]; // If specified, only show for these roles
+  permission?: keyof ReturnType<typeof usePermissions>; // Permission required to view
 }
-
-const navigationItems: NavItem[] = [
-  {
-    name: 'Dashboard',
-    href: '/dashboard',
-    icon: '📊',
-  },
-  {
-    name: 'Calendar',
-    href: '/dashboard/calendar',
-    icon: '📅',
-  },
-  {
-    name: 'Hotels',
-    href: '/dashboard/hotels',
-    icon: '🏨',
-  },
-  {
-    name: 'Rooms',
-    href: '/dashboard/rooms',
-    icon: '🛏️',
-  },
-  {
-    name: 'Reservations',
-    href: '/dashboard/reservations',
-    icon: '📋',
-  },
-  {
-    name: 'Guests',
-    href: '/dashboard/guests',
-    icon: '👥',
-  },
-  {
-    name: 'Users',
-    href: '/dashboard/users',
-    icon: '👤',
-    roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
-  },
-];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
+  const permissions = usePermissions();
+
+  // Define navigation items dynamically based on role
+  const getNavigationItems = (): NavItem[] => {
+    // SuperAdmin only sees Dashboard, Users, Hotels
+    if (permissions.isSuperAdmin) {
+      return [
+        {
+          name: 'Dashboard',
+          href: '/dashboard',
+          icon: '📊',
+        },
+        {
+          name: 'Users',
+          href: '/dashboard/users',
+          icon: '👤',
+        },
+        {
+          name: 'Hotels',
+          href: '/dashboard/hotels',
+          icon: '🏨',
+        },
+      ];
+    }
+    
+    // Guest users see limited navigation
+    if (permissions.isGuest) {
+      return [
+        {
+          name: 'My Reservations',
+          href: '/dashboard/reservations',
+          icon: '📋',
+        },
+        {
+          name: 'Availability',
+          href: '/dashboard/availability',
+          icon: '🔍',
+        },
+        {
+          name: 'Calendar',
+          href: '/dashboard/calendar',
+          icon: '📅',
+        },
+      ];
+    }
+    
+    // Admin and Manager see operational items
+    return [
+      {
+        name: 'Dashboard',
+        href: '/dashboard',
+        icon: '📊',
+      },
+      {
+        name: 'Calendar',
+        href: '/dashboard/calendar',
+        icon: '📅',
+        permission: 'canViewReservations',
+      },
+      {
+        name: 'Availability',
+        href: '/dashboard/availability',
+        icon: '🔍',
+      },
+      {
+        name: 'Hotels',
+        href: '/dashboard/hotels',
+        icon: '🏨',
+        permission: 'canViewHotels',
+      },
+      {
+        name: 'Rooms',
+        href: '/dashboard/rooms',
+        icon: '🛏️',
+        permission: 'canViewRooms',
+      },
+      {
+        name: 'Reservations',
+        href: '/dashboard/reservations',
+        icon: '📋',
+        permission: 'canViewReservations',
+      },
+      {
+        name: 'Guests',
+        href: '/dashboard/guests',
+        icon: '👥',
+        permission: 'canViewGuests',
+      },
+    ];
+  };
+  
+  const navigationItems = getNavigationItems();
 
   const canViewItem = (item: NavItem) => {
-    if (!item.roles) return true;
-    return item.roles.some(role => user?.roles.includes(role));
+    if (!item.permission) return true;
+    return permissions[item.permission];
   };
 
   return (

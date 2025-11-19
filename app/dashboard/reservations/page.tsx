@@ -4,8 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useReservations, useConfirmReservation, useCheckIn, useCheckOut, useCancelReservation } from '@/hooks/useReservations';
-import { useHotels } from '@/hooks/useHotels';
 import { useToast } from '@/components/ui/Toast';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useQuery } from '@tanstack/react-query';
+import { hotelsApi } from '@/lib/api';
+import { hotelKeys } from '@/hooks/useHotels';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,8 +44,15 @@ import { formatDate } from '@/lib/utils/date';
 export default function ReservationsPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const permissions = usePermissions();
   const { data: reservations, isLoading, error } = useReservations();
-  const { data: hotels } = useHotels();
+  
+  // Only fetch hotels if user can view all reservations (Admin/Manager/SuperAdmin)
+  const { data: hotels } = useQuery({
+    queryKey: hotelKeys.lists(),
+    queryFn: () => hotelsApi.getAll(),
+    enabled: permissions.canViewAllReservations,
+  });
   
   const confirmReservation = useConfirmReservation();
   const checkIn = useCheckIn();
@@ -167,7 +177,7 @@ export default function ReservationsPage() {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`grid grid-cols-1 gap-4 ${permissions.canViewAllReservations ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
               <div>
                 <Label htmlFor="search-reservations">Search</Label>
                 <Input
@@ -178,22 +188,24 @@ export default function ReservationsPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div>
-                <Label htmlFor="filter-hotel">Filter by hotel</Label>
-                <Select value={selectedHotelId} onValueChange={setSelectedHotelId}>
-                  <SelectTrigger id="filter-hotel">
-                    <SelectValue placeholder="All Hotels" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Hotels</SelectItem>
-                    {hotels?.map((hotel) => (
-                      <SelectItem key={hotel.id} value={hotel.id.toString()}>
-                        {hotel.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {permissions.canViewAllReservations && (
+                <div>
+                  <Label htmlFor="filter-hotel">Filter by hotel</Label>
+                  <Select value={selectedHotelId} onValueChange={setSelectedHotelId}>
+                    <SelectTrigger id="filter-hotel">
+                      <SelectValue placeholder="All Hotels" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Hotels</SelectItem>
+                      {hotels?.map((hotel: any) => (
+                        <SelectItem key={hotel.id} value={hotel.id.toString()}>
+                          {hotel.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
                 <Label htmlFor="filter-status">Status</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>

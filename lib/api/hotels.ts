@@ -2,9 +2,10 @@ import apiClient from './client';
 import { Hotel, CreateHotelDto, UpdateHotelDto } from '@/types';
 
 export const hotelsApi = {
-  // GET /api/Hotels
+  // GET /api/Hotels/public - Returns all hotels for any authenticated user
+  // Backend filters by ownership for staff, returns all for guests
   getAll: async (): Promise<Hotel[]> => {
-    const response = await apiClient.get<Hotel[]>('/Hotels');
+    const response = await apiClient.get<Hotel[]>('/Hotels/public');
     return response.data;
   },
 

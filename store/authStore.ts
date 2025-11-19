@@ -24,6 +24,10 @@ interface AuthStore {
   setError: (error: string | null) => void;
   hasRole: (role: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
+  isSuperAdmin: () => boolean;
+  isAdmin: () => boolean;
+  isManager: () => boolean;
+  isGuest: () => boolean;
   setHasHydrated: (state: boolean) => void;
 }
 
@@ -143,6 +147,26 @@ export const useAuthStore = create<AuthStore>()(
       hasAnyRole: (roles: string[]) => {
         const { user } = get();
         return roles.some(role => user?.roles.includes(role)) || false;
+      },
+
+      isSuperAdmin: () => {
+        const { user } = get();
+        return user?.roles.includes('SuperAdmin') || false;
+      },
+
+      isAdmin: () => {
+        const { user } = get();
+        return user?.roles.includes('Admin') || false;
+      },
+
+      isManager: () => {
+        const { user } = get();
+        return user?.roles.includes('Manager') || false;
+      },
+
+      isGuest: () => {
+        const { user } = get();
+        return user?.roles.includes('Guest') || false;
       },
     }),
     {

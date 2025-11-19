@@ -143,3 +143,30 @@ export function useMarkRoomMaintenance() {
     },
   });
 }
+
+// Get room status summary
+export function useRoomStatusSummary() {
+  return useQuery({
+    queryKey: [...roomKeys.stats(), 'status-summary'],
+    queryFn: () => roomsApi.getStatusSummary(),
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+  });
+}
+
+// Get occupancy rate
+export function useOccupancyRate() {
+  return useQuery({
+    queryKey: [...roomKeys.stats(), 'occupancy-rate'],
+    queryFn: () => roomsApi.getOccupancyRate(),
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+  });
+}
+
+// Get occupancy trends
+export function useOccupancyTrends(days: number = 30) {
+  return useQuery({
+    queryKey: [...roomKeys.stats(), 'occupancy-trends', days],
+    queryFn: () => roomsApi.getOccupancyTrends(days),
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+  });
+}

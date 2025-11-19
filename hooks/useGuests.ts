@@ -11,6 +11,7 @@ export const guestKeys = {
   detail: (id: number) => [...guestKeys.details(), id] as const,
   byHotel: (hotelId: number) => [...guestKeys.all, 'hotel', hotelId] as const,
   myGuests: () => [...guestKeys.all, 'my-guests'] as const,
+  myProfile: () => [...guestKeys.all, 'my-profile'] as const,
   stats: () => [...guestKeys.all, 'stats'] as const,
 };
 
@@ -45,6 +46,15 @@ export function useMyGuests() {
   return useQuery({
     queryKey: guestKeys.myGuests(),
     queryFn: () => guestsApi.getMyGuests(),
+  });
+}
+
+// Get or create guest profile for current logged-in user
+export function useMyGuestProfile() {
+  return useQuery({
+    queryKey: guestKeys.myProfile(),
+    queryFn: () => guestsApi.getMyProfile(),
+    staleTime: 5 * 60 * 1000, // 5 minutes - profile data doesn't change often
   });
 }
 

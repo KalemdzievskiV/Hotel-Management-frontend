@@ -201,3 +201,21 @@ export function useCheckAvailability(roomId: number | undefined, checkIn: string
     enabled: !!roomId && !!checkIn && !!checkOut,
   });
 }
+
+// Get today's check-ins
+export function useTodaysCheckIns() {
+  return useQuery({
+    queryKey: [...reservationKeys.all, 'today', 'check-ins'],
+    queryFn: () => reservationsApi.getTodaysCheckIns(),
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+  });
+}
+
+// Get today's check-outs
+export function useTodaysCheckOuts() {
+  return useQuery({
+    queryKey: [...reservationKeys.all, 'today', 'check-outs'],
+    queryFn: () => reservationsApi.getTodaysCheckOuts(),
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+  });
+}

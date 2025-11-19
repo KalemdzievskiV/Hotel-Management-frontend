@@ -43,6 +43,7 @@ export default function EditHotelPage() {
     amenities: '',
     checkInTime: '14:00',
     checkOutTime: '11:00',
+    bufferTimeHours: 3,
     isActive: true,
   });
 
@@ -65,6 +66,7 @@ export default function EditHotelPage() {
         amenities: hotel.amenities || '',
         checkInTime: hotel.checkInTime || '14:00',
         checkOutTime: hotel.checkOutTime || '11:00',
+        bufferTimeHours: hotel.bufferTimeHours || 3,
         isActive: hotel.isActive,
       });
     }
@@ -107,7 +109,7 @@ export default function EditHotelPage() {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'stars' ? parseInt(value) : 
+      [name]: name === 'stars' || name === 'bufferTimeHours' ? parseInt(value) : 
               type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
               value,
     }));
@@ -331,7 +333,7 @@ export default function EditHotelPage() {
               <CardTitle>Check-in/Check-out</CardTitle>
             </CardHeader>
             <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="checkInTime">Check-in Time</Label>
                 <Input
@@ -352,6 +354,20 @@ export default function EditHotelPage() {
                   value={formData.checkOutTime}
                   onChange={handleChange}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bufferTimeHours">Cleaning Buffer (hours)</Label>
+                <Input
+                  id="bufferTimeHours"
+                  type="number"
+                  name="bufferTimeHours"
+                  min="0"
+                  max="24"
+                  value={formData.bufferTimeHours}
+                  onChange={handleChange}
+                />
+                <p className="text-xs text-gray-500">Time needed between guests for cleaning</p>
               </div>
             </div>
             </CardContent>
