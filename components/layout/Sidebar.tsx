@@ -103,6 +103,12 @@ export default function Sidebar() {
         icon: '👥',
         permission: 'canViewGuests',
       },
+      {
+        name: 'Reports',
+        href: '/dashboard/reports',
+        icon: '📈',
+        permission: 'canAccessAdminDashboard',
+      },
     ];
   };
   

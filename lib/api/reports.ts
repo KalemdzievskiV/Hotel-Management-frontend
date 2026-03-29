@@ -46,6 +46,31 @@ export interface OutstandingPaymentDto {
     status: string;
 }
 
+export interface CancellationReportDto {
+    date: string;
+    cancellationCount: number;
+    lostRevenue: number;
+    mostCommonReason: string;
+}
+
+export interface NoShowReportDto {
+    reservationId: number;
+    guestName: string;
+    roomNumber: string;
+    checkInDate: string;
+    totalAmount: number;
+}
+
+export interface PaymentReconciliationDto {
+    date: string;
+    totalTransactions: number;
+    cashRevenue: number;
+    cardRevenue: number;
+    bankTransferRevenue: number;
+    otherRevenue: number;
+    totalRevenue: number;
+}
+
 export const reportsApi = {
     getDailyRevenue: async (startDate?: string, endDate?: string) => {
         const params = new URLSearchParams();
@@ -87,4 +112,29 @@ export const reportsApi = {
         const response = await apiClient.get<OutstandingPaymentDto[]>('/reports/payments/outstanding');
         return response.data;
     },
+
+    getCancellations: async (startDate?: string, endDate?: string) => {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        const response = await apiClient.get<CancellationReportDto[]>(`/reports/cancellations?${params.toString()}`);
+        return response.data;
+    },
+
+    getNoShows: async (startDate?: string, endDate?: string) => {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        const response = await apiClient.get<NoShowReportDto[]>(`/reports/noshows?${params.toString()}`);
+        return response.data;
+    },
+
+    getPaymentReconciliation: async (startDate?: string, endDate?: string) => {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        const response = await apiClient.get<PaymentReconciliationDto[]>(`/reports/payments/reconciliation?${params.toString()}`);
+        return response.data;
+    },
+
 };
