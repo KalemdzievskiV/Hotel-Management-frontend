@@ -15,8 +15,7 @@ ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Use next build directly (without --turbopack) for stable production builds
-RUN npx next build
+RUN npm run build
 
 # Production runtime
 FROM node:20-alpine AS runner
