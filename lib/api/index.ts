@@ -8,4 +8,5 @@ export { guestsApi } from './guests';
 export { reservationsApi } from './reservations';
 export { usersApi } from './users';
 export { analyticsApi } from './analytics';
+export { reportsApi } from './reports';
 export { default as apiClient } from './client';

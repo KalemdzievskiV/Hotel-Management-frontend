@@ -50,11 +50,12 @@ export function useMyGuests() {
 }
 
 // Get or create guest profile for current logged-in user
-export function useMyGuestProfile() {
+export function useMyGuestProfile(enabled = false) {
   return useQuery({
     queryKey: guestKeys.myProfile(),
     queryFn: () => guestsApi.getMyProfile(),
     staleTime: 5 * 60 * 1000, // 5 minutes - profile data doesn't change often
+    enabled,
   });
 }
 

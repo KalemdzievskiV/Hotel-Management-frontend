@@ -64,9 +64,9 @@ export default function ReservationDialog({
   const { data: hotels } = useHotels();
   const { data: guests } = useGuests();
   
-  // Auto-fetch guest profile for guest users
+  // Auto-fetch guest profile for guest users only
   const isGuestUser = user?.roles.includes('Guest');
-  const { data: myGuestProfile } = useMyGuestProfile();
+  const { data: myGuestProfile } = useMyGuestProfile(!!isGuestUser);
 
   const [isEditing, setIsEditing] = useState(mode === 'create' || mode === 'edit');
   const [selectedHotelId, setSelectedHotelId] = useState<number>(0);

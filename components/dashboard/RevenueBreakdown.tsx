@@ -338,26 +338,31 @@ export default function RevenueBreakdown() {
             <div className="space-y-3">
               <div className="flex items-center justify-between p-2 bg-white rounded">
                 <span className="text-sm text-gray-600">Total Room Nights Sold</span>
-                <span className="font-semibold text-gray-900">{revenue.totalRoomNights.toFixed(1)}</span>
+                <span className="font-semibold text-gray-900">{(revenue.totalRoomNights ?? 0).toFixed(1)}</span>
               </div>
               <div className="flex items-center justify-between p-2 bg-white rounded">
                 <span className="text-sm text-gray-600">Completed Reservations</span>
-                <span className="font-semibold text-gray-900">{revenue.completedReservations}</span>
+                <span className="font-semibold text-gray-900">{revenue.completedReservations ?? 0}</span>
               </div>
               <div className="flex items-center justify-between p-2 bg-white rounded">
                 <span className="text-sm text-gray-600">Cancellations</span>
-                <span className="font-semibold text-red-600">{revenue.cancellationCount}</span>
+                <span className="font-semibold text-red-600">{revenue.cancellationCount ?? 0}</span>
               </div>
               <div className="flex items-center justify-between p-2 bg-white rounded">
                 <span className="text-sm text-gray-600">Avg Revenue per Booking</span>
                 <span className="font-semibold text-gray-900">
-                  {formatCurrency(revenue.totalRevenue / revenue.completedReservations || 0)}
+                  {formatCurrency((revenue.completedReservations ?? 0) > 0 ? (revenue.totalRevenue ?? 0) / revenue.completedReservations : 0)}
                 </span>
               </div>
               <div className="flex items-center justify-between p-2 bg-green-50 rounded border border-green-200">
                 <span className="text-sm text-green-700 font-medium">Success Rate</span>
                 <span className="font-bold text-green-900">
-                  {Math.round((revenue.completedReservations / (revenue.completedReservations + revenue.cancellationCount)) * 100)}%
+                  {(() => {
+                    const completed = revenue.completedReservations ?? 0;
+                    const cancelled = revenue.cancellationCount ?? 0;
+                    const total = completed + cancelled;
+                    return total > 0 ? Math.round((completed / total) * 100) : 0;
+                  })()}%
                 </span>
               </div>
             </div>
