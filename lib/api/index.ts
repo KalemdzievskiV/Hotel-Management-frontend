@@ -11,4 +11,5 @@ export { analyticsApi } from './analytics';
 export { reportsApi } from './reports';
 export { inventoryApi } from './inventory';
 export { housekeepingApi } from './housekeeping';
+export { walkInApi } from './walk-in';
 export { default as apiClient } from './client';

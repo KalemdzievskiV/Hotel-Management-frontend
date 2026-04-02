@@ -104,6 +104,12 @@ export default function Sidebar() {
         permission: 'canViewGuests',
       },
       {
+        name: 'Walk-In',
+        href: '/dashboard/walk-in',
+        icon: '🚶',
+        permission: 'canViewGuests',
+      },
+      {
         name: 'Inventory',
         href: '/dashboard/inventory',
         icon: '📦',
