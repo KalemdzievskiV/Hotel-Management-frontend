@@ -73,10 +73,10 @@ export const guestsApi = {
     return response.data;
   },
 
-  // GET /api/Guests/search?query={query}
+  // GET /api/Guests/search?name={name}
   search: async (query: string): Promise<Guest[]> => {
     const response = await apiClient.get<Guest[]>('/Guests/search', {
-      params: { query },
+      params: { name: query },
     });
     return response.data;
   },
