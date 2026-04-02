@@ -9,4 +9,6 @@ export { reservationsApi } from './reservations';
 export { usersApi } from './users';
 export { analyticsApi } from './analytics';
 export { reportsApi } from './reports';
+export { inventoryApi } from './inventory';
+export { housekeepingApi } from './housekeeping';
 export { default as apiClient } from './client';

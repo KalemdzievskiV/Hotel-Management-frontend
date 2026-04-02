@@ -104,6 +104,18 @@ export default function Sidebar() {
         permission: 'canViewGuests',
       },
       {
+        name: 'Inventory',
+        href: '/dashboard/inventory',
+        icon: '📦',
+        permission: 'canAccessAdminDashboard',
+      },
+      {
+        name: 'Housekeeping',
+        href: '/dashboard/housekeeping',
+        icon: '🧹',
+        permission: 'canAccessAdminDashboard',
+      },
+      {
         name: 'Reports',
         href: '/dashboard/reports',
         icon: '📈',
