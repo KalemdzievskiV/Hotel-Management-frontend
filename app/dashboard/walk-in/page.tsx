@@ -77,9 +77,14 @@ export default function WalkInPage() {
     const hotelId = selectedHotelId ?? (hotels?.[0]?.id ?? null);
 
     const { data: availableRooms, isLoading: roomsLoading } = useQuery({
-        queryKey: ['available-tonight', hotelId],
-        queryFn: () => walkInApi.getAvailableRoomsTonight(hotelId!),
+        queryKey: ['available-rooms', hotelId, checkIn, checkOut],
+        queryFn: () => reservationsApi.getAvailableRooms({
+            hotelId: hotelId!,
+            checkIn: new Date(checkIn).toISOString(),
+            checkOut: new Date(checkOut).toISOString(),
+        }),
         enabled: !!hotelId,
+        select: (data) => data.rooms,
     });
 
     const { data: guestSearchResults } = useQuery({
@@ -454,7 +459,9 @@ export default function WalkInPage() {
                                         </Button>
                                     </div>
                                     {quickCheckIn.isError && (
-                                        <p className="text-red-600 text-sm text-center">Check-in failed. Please verify room availability and try again.</p>
+                                        <p className="text-red-600 text-sm text-center">
+                                            {(quickCheckIn.error as any)?.response?.data?.message || 'Check-in failed. Please verify room availability and try again.'}
+                                        </p>
                                     )}
                                 </CardContent>
                             </Card>
