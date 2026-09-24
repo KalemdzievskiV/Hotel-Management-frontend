@@ -31,6 +31,16 @@ interface AuthStore {
   setHasHydrated: (state: boolean) => void;
 }
 
+// Reads the JWT's exp claim; unreadable tokens count as expired
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.exp !== 'number' || payload.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
+
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -64,12 +74,6 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: null,
           });
-
-          // Also store in localStorage for API client
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('user', JSON.stringify(user));
-          }
         } catch (error: any) {
           const errorMessage = error.response?.data?.message || 'Login failed';
           set({
@@ -101,12 +105,6 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: null,
           });
-
-          // Store in localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('user', JSON.stringify(user));
-          }
         } catch (error: any) {
           const errorMessage = error.response?.data?.message || 'Registration failed';
           set({
@@ -127,12 +125,6 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: false,
           error: null,
         });
-
-        // Clear localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
       },
 
       setError: (error: string | null) => {
@@ -177,6 +169,10 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
+        // Drop a stored session whose token has already expired
+        if (state?.token && isTokenExpired(state.token)) {
+          state.logout();
+        }
         state?.setHasHydrated(true);
       },
     }

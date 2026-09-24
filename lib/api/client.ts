@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
+import { useAuthStore } from '@/store/authStore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
@@ -14,9 +15,9 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    // Get token from localStorage
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    
+    // The auth store is the single source of truth for the session
+    const token = useAuthStore.getState().token;
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -38,11 +39,12 @@ apiClient.interceptors.response.use(
       // Server responded with error status
       const status = error.response.status;
       
-      if (status === 401) {
-        // Unauthorized - clear token and redirect to login
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+      // A 401 from login/register is just a wrong password; anything else means the session
+      // ended (expired, deactivated, roles changed), so sign out and go to the login page
+      const isAuthRequest = error.config?.url?.startsWith('/Auth/') ?? false;
+      if (status === 401 && !isAuthRequest && typeof window !== 'undefined') {
+        useAuthStore.getState().logout();
+        if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
       }

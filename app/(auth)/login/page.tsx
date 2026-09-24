@@ -197,6 +197,8 @@ export default function LoginPage() {
             </div>
           </form>
 
+          {/* Seeded dev accounts only exist in Development; never advertise them in production */}
+          {process.env.NODE_ENV === 'development' && (
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -209,10 +211,14 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="mt-4 text-sm text-gray-600 space-y-1">
+              <p><strong>Admin:</strong> admin@hotel.com / Admin123!</p>
+              <p><strong>Manager:</strong> manager@hotel.com / Manager123!</p>
+              <p><strong>Housekeeper:</strong> housekeeper@hotel.com / Housekeeper123!</p>
+              <p><strong>Guest:</strong> guest@hotel.com / Guest123!</p>
               <p><strong>SuperAdmin:</strong> superadmin@hotel.com / SuperAdmin123!</p>
-              <p className="text-xs text-gray-500">Or register as a Guest</p>
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>
