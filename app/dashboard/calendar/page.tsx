@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Download, Plus } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -19,6 +20,7 @@ import {
   MONTH_NAMES, STATUS_STYLES, ViewMode, isSameDay, parseStayDate, startOfDay,
 } from '@/components/calendar/calendarUtils';
 import { reservationsApi, hotelsApi, roomsApi } from '@/lib/api';
+import { usePermissions } from '@/hooks/usePermissions';
 import { downloadCSV } from '@/lib/export';
 import { BookingType, Reservation, ReservationStatus } from '@/types';
 
@@ -83,19 +85,58 @@ function computeStats(reservations: Reservation[], roomCount: number): CalendarS
   };
 }
 
+// useSearchParams needs a Suspense boundary in the App Router
 export default function CalendarPage() {
+  return (
+    <Suspense>
+      <Calendar />
+    </Suspense>
+  );
+}
+
+/**
+ * ?hotelId=&roomId=[&checkIn=&checkOut=&bookingType=] (sent by the Availability page) opens the
+ * booking dialog for that room and stay
+ */
+function roomPrefillFromUrl(params: URLSearchParams): ReservationPrefill | null {
+  const hotelId = Number(params.get('hotelId'));
+  const roomId = Number(params.get('roomId'));
+  if (!(hotelId > 0 && roomId > 0)) return null;
+
+  const bookingType = Number(params.get('bookingType'));
+  return {
+    hotelId,
+    roomId,
+    checkInDate: params.get('checkIn') || undefined,
+    checkOutDate: params.get('checkOut') || undefined,
+    bookingType: bookingType === BookingType.ShortStay ? BookingType.ShortStay : BookingType.Daily,
+  };
+}
+
+function Calendar() {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isGuest } = usePermissions();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [filters, setFilters] = useState<CalendarFilters>(DEFAULT_FILTERS);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [urlPrefill] = useState(() => roomPrefillFromUrl(searchParams));
+  const [dialogOpen, setDialogOpen] = useState(urlPrefill !== null);
   const [dialogMode, setDialogMode] = useState<DialogMode>('create');
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | ReservationPrefill | null>(null);
-  const [dialogInitialDate, setDialogInitialDate] = useState<Date | undefined>();
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | ReservationPrefill | null>(urlPrefill);
+  const [dialogInitialDate, setDialogInitialDate] = useState<Date | undefined>(() => (urlPrefill ? new Date() : undefined));
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    // Don't reopen the prefilled booking on refresh
+    if (!open && urlPrefill) router.replace('/dashboard/calendar');
+  };
 
   const { data: hotels = [] } = useQuery({ queryKey: ['hotels'], queryFn: hotelsApi.getAll });
-  const { data: rooms = [] } = useQuery({ queryKey: ['rooms'], queryFn: roomsApi.getAll });
+  // The rooms list is staff-only; guests only get the date-based views, which don't need it
+  const { data: rooms = [] } = useQuery({ queryKey: ['rooms'], queryFn: roomsApi.getAll, enabled: !isGuest });
   const { data: reservations = [], isLoading } = useQuery({ queryKey: ['reservations'], queryFn: reservationsApi.getAll });
 
   const filteredRooms = useMemo(
@@ -213,6 +254,7 @@ export default function CalendarPage() {
           hotels={hotels}
           rooms={filteredRooms}
           onToday={() => setCurrentDate(new Date())}
+          roomViewsAvailable={!isGuest}
         />
 
         <Card>
@@ -237,7 +279,7 @@ export default function CalendarPage() {
 
       <ReservationDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleDialogOpenChange}
         mode={dialogMode}
         reservation={selectedReservation}
         initialDate={dialogInitialDate}

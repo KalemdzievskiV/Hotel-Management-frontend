@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { AvailabilityCalendar } from '@/components/reservations/AvailabilityCalendar';
+import { AvailabilityCalendar, SearchedStay } from '@/components/reservations/AvailabilityCalendar';
 import { usePublicHotels } from '@/hooks/usePublicHotels';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/Toast';
@@ -28,11 +28,13 @@ export default function AvailabilityPage() {
   
   const [selectedHotelId, setSelectedHotelId] = useState<number | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [selectedStay, setSelectedStay] = useState<SearchedStay | null>(null);
   
   const isGuest = user?.roles.includes('Guest');
 
-  const handleRoomSelect = (room: Room) => {
+  const handleRoomSelect = (room: Room, stay: SearchedStay) => {
     setSelectedRoom(room);
+    setSelectedStay(stay);
     showToast(`Selected Room ${room.roomNumber}`, 'success');
   };
 
@@ -42,8 +44,14 @@ export default function AvailabilityPage() {
       return;
     }
     
-    // Navigate to calendar with pre-filled data
-    router.push(`/dashboard/calendar?roomId=${selectedRoom.id}`);
+    // The calendar opens the booking dialog with this room and the searched stay prefilled
+    const params = new URLSearchParams({ hotelId: String(selectedRoom.hotelId), roomId: String(selectedRoom.id) });
+    if (selectedStay) {
+      params.set('checkIn', selectedStay.checkIn);
+      params.set('checkOut', selectedStay.checkOut);
+      params.set('bookingType', String(selectedStay.bookingType));
+    }
+    router.push(`/dashboard/calendar?${params}`);
   };
 
   return (

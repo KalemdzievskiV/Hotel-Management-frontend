@@ -24,6 +24,7 @@ In development the login page lists the seeded demo accounts for each role.
 | `npm run build` | Production build (type-checked) |
 | `npm start`     | Serve the production build |
 | `npm run lint`  | ESLint |
+| `npm run test:e2e` | End-to-end journeys with Playwright (see [e2e/README.md](e2e/README.md)) |
 
 ## What each role sees
 

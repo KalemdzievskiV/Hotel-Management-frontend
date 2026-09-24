@@ -26,12 +26,19 @@ import {
   Loader2
 } from 'lucide-react';
 
+export interface SearchedStay {
+  checkIn: string;
+  checkOut: string;
+  bookingType: BookingType;
+}
+
 interface AvailabilityCalendarProps {
   hotelId: number;
   defaultCheckIn?: string;
   defaultCheckOut?: string;
   defaultBookingType?: BookingType;
-  onRoomSelect?: (room: Room) => void;
+  /** Called with the chosen room and the stay that was searched for */
+  onRoomSelect?: (room: Room, stay: SearchedStay) => void;
   selectedRoomId?: number;
   compact?: boolean; // Compact mode for dialogs
 }
@@ -301,7 +308,7 @@ export function AvailabilityCalendar({
                 bookingType={bookingType}
                 nights={duration.nights}
                 hours={duration.hours}
-                onSelect={onRoomSelect}
+                onSelect={(selectedRoom) => onRoomSelect?.(selectedRoom, { checkIn, checkOut, bookingType })}
                 selected={selectedRoomId === room.id}
                 compact={compact}
               />

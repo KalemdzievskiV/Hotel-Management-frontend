@@ -340,7 +340,7 @@ export default function ViewReservationPage() {
 
         {/* Payment history (ledger) */}
         {payments && payments.length > 0 && (
-          <Card>
+          <Card data-testid="payment-history">
             <CardHeader>
               <CardTitle>Payment History</CardTitle>
             </CardHeader>

@@ -178,7 +178,7 @@ export default function Sidebar() {
                 }
               `}
             >
-              <span className="text-xl mr-3">{item.icon}</span>
+              <span className="text-xl mr-3" aria-hidden="true">{item.icon}</span>
               <span className="font-medium">{item.name}</span>
             </Link>
           );

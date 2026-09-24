@@ -301,7 +301,8 @@ export default function ReservationsPage() {
                             View
                           </Button>
                           
-                          {reservation.status === ReservationStatus.Pending && (
+                          {/* Moving a booking through its lifecycle is staff work; guests can only view and cancel */}
+                          {permissions.canViewAllReservations && reservation.status === ReservationStatus.Pending && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -313,7 +314,7 @@ export default function ReservationsPage() {
                             </Button>
                           )}
                           
-                          {reservation.status === ReservationStatus.Confirmed && reservation.canCheckIn && (
+                          {permissions.canViewAllReservations && reservation.status === ReservationStatus.Confirmed && reservation.canCheckIn && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -325,7 +326,7 @@ export default function ReservationsPage() {
                             </Button>
                           )}
                           
-                          {reservation.status === ReservationStatus.CheckedIn && reservation.canCheckOut && (
+                          {permissions.canViewAllReservations && reservation.status === ReservationStatus.CheckedIn && reservation.canCheckOut && (
                             <Button
                               variant="ghost"
                               size="sm"

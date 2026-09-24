@@ -25,8 +25,14 @@ import { useReservationActions } from './dialog/useReservationActions';
 import { estimateTotal, getStayLength, validateReservationForm } from './dialog/validation';
 import { ReservationDialogMode, ReservationFormErrors } from './dialog/types';
 
-/** Room to preselect when creating a reservation (e.g. from a calendar row) */
-export type ReservationPrefill = { roomId: number; hotelId: number };
+/** Room (and optionally the stay) to preselect when creating a reservation */
+export type ReservationPrefill = {
+  roomId: number;
+  hotelId: number;
+  checkInDate?: string;
+  checkOutDate?: string;
+  bookingType?: BookingType;
+};
 
 interface ReservationDialogProps {
   open: boolean;
@@ -103,12 +109,19 @@ function initialFormData(mode: ReservationDialogMode, reservation: ReservationDi
     };
   }
 
+  const prefill = reservation && !('id' in reservation) ? reservation : undefined;
+  const bookingType = prefill?.bookingType ?? BookingType.Daily;
+
   return {
     ...EMPTY_FORM,
+    bookingType,
     // Format the local calendar date; toISOString() would shift it to the previous day east of UTC
-    checkInDate: initialDate ? format(initialDate, 'yyyy-MM-dd') : '',
-    hotelId: reservation?.hotelId ?? 0,
-    roomId: reservation?.roomId ?? 0,
+    checkInDate: prefill?.checkInDate
+      ? toStayInputValue(prefill.checkInDate, bookingType)
+      : initialDate ? format(initialDate, 'yyyy-MM-dd') : '',
+    checkOutDate: prefill?.checkOutDate ? toStayInputValue(prefill.checkOutDate, bookingType) : '',
+    hotelId: prefill?.hotelId ?? 0,
+    roomId: prefill?.roomId ?? 0,
   };
 }
 

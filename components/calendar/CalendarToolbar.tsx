@@ -22,14 +22,16 @@ interface CalendarToolbarProps {
   hotels: Hotel[];
   rooms: Room[];
   onToday: () => void;
+  /** Timeline and list are per-room views, only for staff */
+  roomViewsAvailable: boolean;
 }
 
-const VIEW_MODES: { mode: ViewMode; label: string; icon: React.ComponentType<{ className?: string }>; className?: string }[] = [
+const VIEW_MODES: { mode: ViewMode; label: string; icon: React.ComponentType<{ className?: string }>; className?: string; perRoom?: boolean }[] = [
   { mode: 'month', label: 'Month', icon: Grid },
   { mode: 'week', label: 'Week', icon: List },
   { mode: 'day', label: 'Day', icon: Clock },
-  { mode: 'list', label: 'List', icon: List },
-  { mode: 'timeline', label: 'Timeline', icon: BarChart3, className: 'hidden sm:flex' },
+  { mode: 'list', label: 'List', icon: List, perRoom: true },
+  { mode: 'timeline', label: 'Timeline', icon: BarChart3, className: 'hidden sm:flex', perRoom: true },
 ];
 
 function FilterSelect({ label, value, onChange, allLabel, options }: {
@@ -58,7 +60,7 @@ function FilterSelect({ label, value, onChange, allLabel, options }: {
 }
 
 export default function CalendarToolbar({
-  viewMode, onViewModeChange, filters, onFiltersChange, hotels, rooms, onToday,
+  viewMode, onViewModeChange, filters, onFiltersChange, hotels, rooms, onToday, roomViewsAvailable,
 }: CalendarToolbarProps) {
   const update = (changes: Partial<CalendarFilters>) => onFiltersChange({ ...filters, ...changes });
 
@@ -68,7 +70,7 @@ export default function CalendarToolbar({
         <Card>
           <CardContent className="pt-6">
             <div className="flex gap-2 flex-wrap">
-              {VIEW_MODES.map(({ mode, label, icon: Icon, className = '' }) => (
+              {VIEW_MODES.filter(view => roomViewsAvailable || !view.perRoom).map(({ mode, label, icon: Icon, className = '' }) => (
                 <Button
                   key={mode}
                   variant={viewMode === mode ? 'default' : 'outline'}
@@ -106,6 +108,7 @@ export default function CalendarToolbar({
             allLabel="All Hotels"
             options={hotels.map(hotel => ({ value: hotel.id.toString(), label: hotel.name }))}
           />
+          {roomViewsAvailable && (
           <FilterSelect
             label="Room"
             value={filters.roomId}
@@ -113,6 +116,7 @@ export default function CalendarToolbar({
             allLabel="All Rooms"
             options={rooms.map(room => ({ value: room.id.toString(), label: `Room ${room.roomNumber} - ${room.hotelName}` }))}
           />
+          )}
           <FilterSelect
             label="Status"
             value={filters.status}

@@ -246,7 +246,7 @@ export default function HousekeepingPage() {
                                 ) : (
                                     <div className="divide-y">
                                         {schedule?.tasks.map(task => (
-                                            <div key={task.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
+                                            <div key={task.id} data-testid="housekeeping-task" className="flex items-center justify-between p-4 hover:bg-gray-50">
                                                 <div className="flex items-center gap-4">
                                                     <div className="text-center w-16">
                                                         <p className="font-bold text-lg text-gray-900">Room</p>
