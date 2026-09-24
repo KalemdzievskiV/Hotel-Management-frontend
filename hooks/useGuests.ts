@@ -59,14 +59,6 @@ export function useMyGuestProfile(enabled = false) {
   });
 }
 
-// Get guests count
-export function useGuestsCount() {
-  return useQuery({
-    queryKey: [...guestKeys.stats(), 'count'],
-    queryFn: () => guestsApi.getCount(),
-  });
-}
-
 // Search guests
 export function useSearchGuests(searchTerm: string) {
   return useQuery({

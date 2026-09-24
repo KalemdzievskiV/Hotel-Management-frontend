@@ -25,6 +25,8 @@ export default function DashboardPage() {
     } else if (user.roles.includes('Admin') || user.roles.includes('Manager')) {
       // Admin and Manager go to operations dashboard
       router.replace('/dashboard/admin');
+    } else if (user.roles.includes('Housekeeper')) {
+      router.replace('/dashboard/housekeeping');
     } else if (user.roles.includes('Guest')) {
       // Guest users go to the general dashboard (reservations view)
       router.replace('/dashboard/reservations');

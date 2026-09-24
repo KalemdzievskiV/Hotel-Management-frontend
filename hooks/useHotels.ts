@@ -29,14 +29,6 @@ export function useHotel(id: number | undefined) {
   });
 }
 
-// Get hotels count
-export function useHotelsCount() {
-  return useQuery({
-    queryKey: [...hotelKeys.stats(), 'count'],
-    queryFn: () => hotelsApi.getCount(),
-  });
-}
-
 // Create hotel mutation
 export function useCreateHotel() {
   const queryClient = useQueryClient();

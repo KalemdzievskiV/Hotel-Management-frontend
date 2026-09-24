@@ -100,11 +100,6 @@ export const roomsApi = {
     return response.data;
   },
 
-  // GET /api/Rooms/stats/count
-  getCount: async (): Promise<number> => {
-    const response = await apiClient.get<number>('/Rooms/stats/count');
-    return response.data;
-  },
 
   // GET /api/Rooms/stats/status-summary
   getStatusSummary: async (): Promise<RoomStatusSummary> => {

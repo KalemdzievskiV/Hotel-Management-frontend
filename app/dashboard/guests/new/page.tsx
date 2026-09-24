@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useCreateGuest } from '@/hooks/useGuests';
@@ -60,9 +60,17 @@ export default function NewGuestPage() {
 
   const [errors, setErrors] = useState<Partial<Record<keyof CreateGuestDto, string>>>({});
 
+  // Guests belong to a hotel; preselect it when the user only works at one
+  useEffect(() => {
+    if (hotels?.length === 1 && !formData.hotelId) {
+      setFormData(prev => ({ ...prev, hotelId: hotels[0].id }));
+    }
+  }, [hotels, formData.hotelId]);
+
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof CreateGuestDto, string>> = {};
 
+    if (!formData.hotelId) newErrors.hotelId = 'Hotel is required';
     if (!formData.firstName?.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName?.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email?.trim()) newErrors.email = 'Email is required';
@@ -191,14 +199,14 @@ export default function NewGuestPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="hotelId">Hotel (Optional)</Label>
+                  <Label htmlFor="hotelId">Hotel *</Label>
                   <Select
                     name="hotelId"
                     value={formData.hotelId?.toString() || ''}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, hotelId: value ? parseInt(value) : undefined }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="No specific hotel" />
+                      <SelectValue placeholder="Select hotel" />
                     </SelectTrigger>
                     <SelectContent>
                       {hotels?.map((hotel) => (
@@ -208,7 +216,7 @@ export default function NewGuestPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500">Link this walk-in guest to a specific hotel</p>
+                  {errors.hotelId && <p className="text-sm text-red-600">{errors.hotelId}</p>}
                 </div>
 
                 <div className="space-y-2">

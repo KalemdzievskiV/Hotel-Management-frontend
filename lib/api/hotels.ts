@@ -1,9 +1,8 @@
 import apiClient from './client';
-import { Hotel, CreateHotelDto, UpdateHotelDto } from '@/types';
+import { Hotel, CreateHotelDto, UpdateHotelDto, User } from '@/types';
 
 export const hotelsApi = {
-  // GET /api/Hotels/public - Returns all hotels for any authenticated user
-  // Backend filters by ownership for staff, returns all for guests
+  // GET /api/Hotels/public - guests get every hotel; staff get the hotels they work at
   getAll: async (): Promise<Hotel[]> => {
     const response = await apiClient.get<Hotel[]>('/Hotels/public');
     return response.data;
@@ -27,22 +26,14 @@ export const hotelsApi = {
     return response.data;
   },
 
+  // GET /api/Hotels/{id}/staff - staff assigned to the hotel
+  getStaff: async (id: number): Promise<User[]> => {
+    const response = await apiClient.get<User[]>(`/Hotels/${id}/staff`);
+    return response.data;
+  },
+
   // DELETE /api/Hotels/{id}
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/Hotels/${id}`);
-  },
-
-  // GET /api/Hotels/search?name={name}
-  search: async (name: string): Promise<Hotel[]> => {
-    const response = await apiClient.get<Hotel[]>('/Hotels/search', {
-      params: { name },
-    });
-    return response.data;
-  },
-
-  // GET /api/Hotels/stats/count
-  getCount: async (): Promise<number> => {
-    const response = await apiClient.get<number>('/Hotels/stats/count');
-    return response.data;
   },
 };

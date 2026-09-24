@@ -61,6 +61,17 @@ export default function Sidebar() {
       ];
     }
     
+    // Housekeepers only work the housekeeping task list
+    if (permissions.isHousekeeper) {
+      return [
+        {
+          name: 'Housekeeping',
+          href: '/dashboard/housekeeping',
+          icon: '🧹',
+        },
+      ];
+    }
+
     // Admin and Manager see operational items
     return [
       {

@@ -177,17 +177,7 @@ export const reservationsApi = {
     return response.data;
   },
 
-  // GET /api/Reservations/stats/count
-  getCount: async (): Promise<number> => {
-    const response = await apiClient.get<number>('/Reservations/stats/count');
-    return response.data;
-  },
 
-  // GET /api/Reservations/stats/revenue
-  getRevenue: async (): Promise<number> => {
-    const response = await apiClient.get<number>('/Reservations/stats/revenue');
-    return response.data;
-  },
 
   // GET /api/Reservations/stats/by-status
   getByStatusStats: async (): Promise<Record<string, number>> => {

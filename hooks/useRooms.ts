@@ -49,14 +49,6 @@ export function useAvailableRoomsByHotel(hotelId: number | undefined) {
   });
 }
 
-// Get rooms count
-export function useRoomsCount() {
-  return useQuery({
-    queryKey: [...roomKeys.stats(), 'count'],
-    queryFn: () => roomsApi.getCount(),
-  });
-}
-
 // Create room mutation
 export function useCreateRoom() {
   const queryClient = useQueryClient();

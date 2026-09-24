@@ -1,12 +1,13 @@
 import { useAuthStore } from '@/store/authStore';
 
 export const usePermissions = () => {
-  const { user, isSuperAdmin, isAdmin, isManager, isGuest } = useAuthStore();
+  const { user, isSuperAdmin, isAdmin, isManager, isGuest, hasRole } = useAuthStore();
 
   const isSuperAdminRole = isSuperAdmin();
   const isAdminRole = isAdmin();
   const isManagerRole = isManager();
   const isGuestRole = isGuest();
+  const isHousekeeperRole = hasRole('Housekeeper');
 
   return {
     // Role checks
@@ -14,6 +15,7 @@ export const usePermissions = () => {
     isAdmin: isAdminRole,
     isManager: isManagerRole,
     isGuest: isGuestRole,
+    isHousekeeper: isHousekeeperRole,
 
     // User management (SuperAdmin only)
     canManageUsers: isSuperAdminRole,
@@ -45,6 +47,10 @@ export const usePermissions = () => {
     // Guest management
     canViewGuests: isSuperAdminRole || isAdminRole || isManagerRole,
     canManageGuests: isSuperAdminRole || isAdminRole || isManagerRole,
+
+    // Housekeeping: housekeepers work tasks, management plans them
+    canViewHousekeeping: isSuperAdminRole || isAdminRole || isManagerRole || isHousekeeperRole,
+    canManageHousekeeping: isSuperAdminRole || isAdminRole || isManagerRole,
 
     // System features
     canViewSystemSettings: isSuperAdminRole,

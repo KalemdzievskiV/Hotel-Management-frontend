@@ -15,7 +15,6 @@ export const publicHotelKeys = {
   list: (filters?: any) => [...publicHotelKeys.lists(), filters] as const,
   details: () => [...publicHotelKeys.all, 'detail'] as const,
   detail: (id: number) => [...publicHotelKeys.details(), id] as const,
-  search: (query: string) => [...publicHotelKeys.all, 'search', query] as const,
 };
 
 /**
@@ -39,17 +38,5 @@ export function usePublicHotel(id: number | undefined) {
     queryFn: () => publicHotelsApi.getById(id!),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
-  });
-}
-
-/**
- * Search hotels by name (public)
- */
-export function usePublicHotelsSearch(searchQuery: string) {
-  return useQuery({
-    queryKey: publicHotelKeys.search(searchQuery),
-    queryFn: () => publicHotelsApi.search(searchQuery),
-    enabled: searchQuery.length > 0,
-    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }

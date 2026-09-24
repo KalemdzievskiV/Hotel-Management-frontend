@@ -81,9 +81,4 @@ export const guestsApi = {
     return response.data;
   },
 
-  // GET /api/Guests/stats/count
-  getCount: async (): Promise<number> => {
-    const response = await apiClient.get<number>('/Guests/stats/count');
-    return response.data;
-  },
 };

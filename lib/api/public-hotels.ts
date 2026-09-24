@@ -18,20 +18,4 @@ export const publicHotelsApi = {
     const response = await apiClient.get<Hotel>(`/Hotels/${id}`);
     return response.data;
   },
-
-  // Search hotels by name - public endpoint
-  search: async (name: string): Promise<Hotel[]> => {
-    const response = await apiClient.get<Hotel[]>('/Hotels/search', {
-      params: { name },
-    });
-    return response.data;
-  },
-
-  // Search hotels by location
-  searchByLocation: async (city?: string, country?: string): Promise<Hotel[]> => {
-    const response = await apiClient.get<Hotel[]>('/Hotels/search', {
-      params: { city, country },
-    });
-    return response.data;
-  },
 };

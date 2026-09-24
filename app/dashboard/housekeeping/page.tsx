@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { housekeepingApi, CreateHousekeepingTaskDto, UpdateHousekeepingTaskDto } from '@/lib/api/housekeeping';
 import { hotelsApi } from '@/lib/api/hotels';
-import { usersApi } from '@/lib/api/users';
+import { roomsApi } from '@/lib/api/rooms';
+import { usePermissions } from '@/hooks/usePermissions';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -68,10 +69,24 @@ export default function HousekeepingPage() {
     const [showCreate, setShowCreate] = useState(false);
     const [newTask, setNewTask] = useState<Partial<CreateHousekeepingTaskDto>>({ type: 1, priority: 2 });
 
+    // Housekeepers work the task list; planning and staff performance are for management
+    const { canManageHousekeeping } = usePermissions();
+
     const { data: hotels } = useQuery({ queryKey: ['hotels'], queryFn: () => hotelsApi.getAll() });
-    const { data: users } = useQuery({ queryKey: ['users'], queryFn: () => usersApi.getAll() });
 
     const hotelId = selectedHotelId ?? (hotels?.[0]?.id ?? null);
+
+    const { data: staff } = useQuery({
+        queryKey: ['hotel-staff', hotelId],
+        queryFn: () => hotelsApi.getStaff(hotelId!),
+        enabled: !!hotelId && canManageHousekeeping,
+    });
+
+    const { data: rooms } = useQuery({
+        queryKey: ['rooms', 'hotel', hotelId],
+        queryFn: () => roomsApi.getByHotel(hotelId!),
+        enabled: !!hotelId && canManageHousekeeping,
+    });
 
     const { data: schedule, isLoading } = useQuery({
         queryKey: ['housekeeping-schedule', hotelId, selectedDate],
@@ -88,7 +103,7 @@ export default function HousekeepingPage() {
     const { data: performance } = useQuery({
         queryKey: ['housekeeping-performance', hotelId],
         queryFn: () => housekeepingApi.getPerformance(hotelId!),
-        enabled: !!hotelId,
+        enabled: !!hotelId && canManageHousekeeping,
     });
 
     const createTask = useMutation({
@@ -123,7 +138,7 @@ export default function HousekeepingPage() {
     });
 
     const hotelRooms = allTasks ? [...new Map(allTasks.map(t => [t.roomId, { id: t.roomId, number: t.roomNumber }])).values()] : [];
-    const staffUsers = users?.filter(u => u.roles?.includes('Manager') || u.roles?.includes('Admin')) ?? [];
+    const staffUsers = staff?.filter(u => u.roles?.includes('Housekeeper')) ?? [];
 
     return (
         <DashboardLayout>
@@ -141,12 +156,16 @@ export default function HousekeepingPage() {
                                 <SelectContent>{hotels.map(h => <SelectItem key={h.id} value={String(h.id)}>{h.name}</SelectItem>)}</SelectContent>
                             </Select>
                         )}
-                        <Button variant="outline" onClick={() => generateDaily.mutate()} disabled={generateDaily.isPending}>
-                            <Wand2 className="h-4 w-4 mr-2" /> Auto-generate Tasks
-                        </Button>
-                        <Button onClick={() => setShowCreate(true)}>
-                            <Plus className="h-4 w-4 mr-2" /> New Task
-                        </Button>
+                        {canManageHousekeeping && (
+                            <>
+                                <Button variant="outline" onClick={() => generateDaily.mutate()} disabled={generateDaily.isPending}>
+                                    <Wand2 className="h-4 w-4 mr-2" /> Auto-generate Tasks
+                                </Button>
+                                <Button onClick={() => setShowCreate(true)}>
+                                    <Plus className="h-4 w-4 mr-2" /> New Task
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -203,7 +222,7 @@ export default function HousekeepingPage() {
                         <TabsList>
                             <TabsTrigger value="schedule">Daily Schedule</TabsTrigger>
                             <TabsTrigger value="all">All Tasks</TabsTrigger>
-                            <TabsTrigger value="performance">Staff Performance</TabsTrigger>
+                            {canManageHousekeeping && <TabsTrigger value="performance">Staff Performance</TabsTrigger>}
                         </TabsList>
                         <Input
                             type="date"
@@ -267,9 +286,11 @@ export default function HousekeepingPage() {
                                             <div className="p-12 text-center">
                                                 <ClipboardList className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                                                 <p className="text-gray-500">No tasks scheduled for this day.</p>
-                                                <Button variant="outline" className="mt-3" onClick={() => generateDaily.mutate()}>
-                                                    <Wand2 className="h-4 w-4 mr-2" /> Auto-generate from checkouts
-                                                </Button>
+                                                {canManageHousekeeping && (
+                                                    <Button variant="outline" className="mt-3" onClick={() => generateDaily.mutate()}>
+                                                        <Wand2 className="h-4 w-4 mr-2" /> Auto-generate from checkouts
+                                                    </Button>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -397,9 +418,29 @@ export default function HousekeepingPage() {
                                 </Select>
                             </div>
                         </div>
-                        <div>
-                            <Label>Room ID</Label>
-                            <Input type="number" placeholder="Enter Room ID" value={newTask.roomId ?? ''} onChange={e => setNewTask(p => ({ ...p, roomId: Number(e.target.value) }))} />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label>Room</Label>
+                                <Select value={newTask.roomId ? String(newTask.roomId) : undefined} onValueChange={v => setNewTask(p => ({ ...p, roomId: Number(v) }))}>
+                                    <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
+                                    <SelectContent>
+                                        {[...(rooms ?? [])]
+                                            .sort((a, b) => a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true }))
+                                            .map(r => <SelectItem key={r.id} value={String(r.id)}>Room {r.roomNumber}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label>Assign to (optional)</Label>
+                                <Select value={newTask.assignedToUserId ?? undefined} onValueChange={v => setNewTask(p => ({ ...p, assignedToUserId: v }))}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={staffUsers.length ? 'Unassigned' : 'No housekeepers yet'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {staffUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.firstName} {u.lastName}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                         <div>
                             <Label>Scheduled For</Label>

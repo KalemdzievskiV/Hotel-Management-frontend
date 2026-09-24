@@ -69,14 +69,6 @@ export function useMyReservations() {
   });
 }
 
-// Get reservations count
-export function useReservationsCount() {
-  return useQuery({
-    queryKey: [...reservationKeys.stats(), 'count'],
-    queryFn: () => reservationsApi.getCount(),
-  });
-}
-
 // Create reservation mutation
 export function useCreateReservation() {
   const queryClient = useQueryClient();
