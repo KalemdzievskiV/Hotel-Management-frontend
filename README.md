@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hotel Management — Frontend
 
-## Getting Started
+Web app for the Hotel Management system: role-based dashboards for platform admins, hotel
+admins/managers, housekeepers and guests. Talks to the ASP.NET Core API in the separate
+`Hotel-Management-backend` repository.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui (Radix) ·
+TanStack Query · Zustand · date-fns · Recharts
+
+## Running locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+echo "NEXT_PUBLIC_API_URL=http://localhost:5213/api" > .env.local   # backend started with `dotnet run`
+npm run dev                                                          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without `NEXT_PUBLIC_API_URL` the app calls `http://localhost:5001/api` (the Docker Compose port).
+In development the login page lists the seeded demo accounts for each role.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script          | What it does |
+|-----------------|--------------|
+| `npm run dev`   | Dev server with Turbopack |
+| `npm run build` | Production build (type-checked) |
+| `npm start`     | Serve the production build |
+| `npm run lint`  | ESLint |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## What each role sees
 
-## Learn More
+| Role        | Lands on                     | Navigation |
+|-------------|------------------------------|------------|
+| SuperAdmin  | `/dashboard/super-admin`     | Users, hotels |
+| Admin / Manager | `/dashboard/admin`       | Calendar, availability, hotels, rooms, reservations, guests, walk-in, inventory, housekeeping, reports |
+| Housekeeper | `/dashboard/housekeeping`    | Housekeeping tasks for their hotel |
+| Guest       | `/dashboard/reservations`    | Their reservations, availability, calendar |
 
-To learn more about Next.js, take a look at the following resources:
+The API enforces all access rules; the UI only hides what a role can't use (`hooks/usePermissions.ts`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/                 Routes (App Router). (auth)/ = login/register, dashboard/ = the app
+components/          UI: ui/ (shadcn primitives), layout/, dashboard/, reservations/, rooms/, auth/
+hooks/               TanStack Query hooks per resource
+lib/api/             Axios API client and one module per backend resource
+lib/utils/           Date helpers
+store/authStore.ts   Session (token + user), persisted to localStorage
+types/               API types and enums (mirror the backend DTOs)
+```
 
-## Deploy on Vercel
+## Conventions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Session:** `store/authStore.ts` is the only place the token lives. The API client attaches it,
+  and on a 401 (outside login/register) signs out and redirects to `/login`. Expired stored
+  sessions are dropped on page load.
+- **Stay dates** are hotel wall-clock values. Overnight stays are sent as `YYYY-MM-DD`, short stays
+  as `YYYY-MM-DDTHH:mm`, without converting to UTC.
+- **Money:** payments and refunds go through the reservation payment endpoints and show up in the
+  reservation's payment history; reservation edits never change amounts paid.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+Build with `NEXT_PUBLIC_API_URL` set to the public API URL (it's baked in at build time).
+The `Dockerfile` takes it as a build argument; see the backend's `docker-compose.yml`.
+
+Product direction and planned features: [ROADMAP.md](ROADMAP.md).
