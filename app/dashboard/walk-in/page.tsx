@@ -80,8 +80,9 @@ export default function WalkInPage() {
         queryKey: ['available-rooms', hotelId, checkIn, checkOut],
         queryFn: () => reservationsApi.getAvailableRooms({
             hotelId: hotelId!,
-            checkIn: new Date(checkIn).toISOString(),
-            checkOut: new Date(checkOut).toISOString(),
+            // Stay times are hotel wall-clock values; send them as entered, not converted to UTC
+            checkIn,
+            checkOut,
         }),
         enabled: !!hotelId,
         select: (data) => data.rooms,
@@ -146,8 +147,8 @@ export default function WalkInPage() {
             roomId: selectedRoom.id,
             existingGuestId: selectedGuest?.id,
             newGuest: isNewGuest ? (newGuest as QuickGuestDto) : undefined,
-            checkInDate: new Date(checkIn).toISOString(),
-            checkOutDate: new Date(checkOut).toISOString(),
+            checkInDate: checkIn,
+            checkOutDate: checkOut,
             numberOfGuests,
             overridePrice: overridePrice ?? undefined,
             discountAmount,

@@ -111,14 +111,11 @@ export default function ReservationDialog({
   const [calculatedAmount, setCalculatedAmount] = useState<number>(0);
 
   // Helper to format date for datetime-local input without timezone conversion
-  const formatDateTimeLocal = (date: string | Date) => {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  // Stay dates are hotel wall-clock values, so read them straight from the ISO string instead of
+  // converting to the browser's time zone. Overnight stays use a date input, short stays datetime-local.
+  const toStayInputValue = (value: string | Date, bookingType: BookingType) => {
+    const iso = typeof value === 'string' ? value : value.toISOString();
+    return bookingType === BookingType.ShortStay ? iso.slice(0, 16) : iso.slice(0, 10);
   };
 
   // Initialize form data based on mode
@@ -152,8 +149,8 @@ export default function ReservationDialog({
         roomId: reservation.roomId,
         guestId: reservation.guestId,
         bookingType: reservation.bookingType,
-        checkInDate: formatDateTimeLocal(reservation.checkInDate),
-        checkOutDate: formatDateTimeLocal(reservation.checkOutDate),
+        checkInDate: toStayInputValue(reservation.checkInDate, reservation.bookingType),
+        checkOutDate: toStayInputValue(reservation.checkOutDate, reservation.bookingType),
         numberOfGuests: reservation.numberOfGuests,
         depositAmount: reservation.depositAmount || 0,
         paymentMethod: reservation.paymentMethod,

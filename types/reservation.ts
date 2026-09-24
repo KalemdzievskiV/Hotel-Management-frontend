@@ -78,6 +78,19 @@ export interface UpdateReservationDto {
   notes?: string;
 }
 
+// One entry of a reservation's payment ledger (type 1 = payment, 2 = refund)
+export interface ReservationPayment {
+  id: number;
+  reservationId: number;
+  type: 1 | 2;
+  amount: number;
+  method?: PaymentMethod;
+  reference?: string;
+  notes?: string;
+  createdAt: string;
+  createdByName?: string;
+}
+
 export interface RecordPaymentDto {
   amount: number;
   paymentMethod: PaymentMethod;

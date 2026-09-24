@@ -185,6 +185,15 @@ export function useRecordPayment() {
   });
 }
 
+// Payment ledger of a reservation (refreshed whenever the reservation detail is invalidated)
+export function useReservationPayments(id: number | undefined) {
+  return useQuery({
+    queryKey: [...reservationKeys.detail(id!), 'payments'],
+    queryFn: () => reservationsApi.getPayments(id!),
+    enabled: !!id,
+  });
+}
+
 // Check room availability
 export function useCheckAvailability(roomId: number | undefined, checkIn: string, checkOut: string) {
   return useQuery({

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useReservation, useConfirmReservation, useCheckIn, useCheckOut, useCancelReservation, useRecordPayment } from '@/hooks/useReservations';
+import { useReservation, useConfirmReservation, useCheckIn, useCheckOut, useCancelReservation, useRecordPayment, useReservationPayments } from '@/hooks/useReservations';
 import { useToast } from '@/components/ui/Toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ReservationStatus, PaymentStatus, PaymentMethod, BookingType, RecordPaymentDto } from '@/types';
-import { formatDate } from '@/lib/utils/date';
+import { formatDate, formatDateTime } from '@/lib/utils/date';
 
 export default function ViewReservationPage() {
   const router = useRouter();
@@ -41,6 +41,7 @@ export default function ViewReservationPage() {
   const checkOut = useCheckOut();
   const cancelReservation = useCancelReservation();
   const recordPayment = useRecordPayment();
+  const { data: payments } = useReservationPayments(reservationId);
 
   const [cancelDialog, setCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -336,6 +337,46 @@ export default function ViewReservationPage() {
           </div>
           </CardContent>
         </Card>
+
+        {/* Payment history (ledger) */}
+        {payments && payments.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y">
+                {payments.map((payment) => {
+                  const isRefund = payment.type === 2;
+                  return (
+                    <div key={payment.id} className="flex items-start justify-between gap-4 py-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900">
+                          {isRefund ? 'Refund' : 'Payment'}
+                          {payment.method !== undefined && payment.method !== null && (
+                            <span className="text-gray-500 font-normal"> · {PaymentMethod[payment.method]}</span>
+                          )}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {formatDateTime(payment.createdAt)}
+                          {payment.createdByName && ` · ${payment.createdByName}`}
+                        </p>
+                        {(payment.reference || payment.notes) && (
+                          <p className="text-sm text-gray-600 truncate">
+                            {[payment.reference, payment.notes].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
+                      </div>
+                      <p className={`font-semibold whitespace-nowrap ${isRefund ? 'text-red-600' : 'text-green-700'}`}>
+                        {isRefund ? '−' : '+'}${payment.amount.toFixed(2)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Special Requests & Notes */}
         {(reservation.specialRequests || reservation.notes) && (

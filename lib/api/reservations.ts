@@ -4,6 +4,7 @@ import {
   CreateReservationDto, 
   UpdateReservationDto,
   RecordPaymentDto,
+  ReservationPayment,
   CancelReservationDto,
   ReservationStatus,
   BookingType,
@@ -167,11 +168,22 @@ export const reservationsApi = {
 
   // POST /api/Reservations/{id}/payment
   recordPayment: async (id: number, data: RecordPaymentDto): Promise<Reservation> => {
-    const response = await apiClient.post<Reservation>(`/Reservations/${id}/payment`, data);
+    // The API names the reference field "reference"
+    const response = await apiClient.post<Reservation>(`/Reservations/${id}/payment`, {
+      amount: data.amount,
+      paymentMethod: data.paymentMethod,
+      reference: data.paymentReference,
+    });
     return response.data;
   },
 
   // POST /api/Reservations/{id}/refund
+  // GET /api/Reservations/{id}/payments - payment ledger
+  getPayments: async (id: number): Promise<ReservationPayment[]> => {
+    const response = await apiClient.get<ReservationPayment[]>(`/Reservations/${id}/payments`);
+    return response.data;
+  },
+
   recordRefund: async (id: number, amount: number): Promise<Reservation> => {
     const response = await apiClient.post<Reservation>(`/Reservations/${id}/refund`, { amount });
     return response.data;
