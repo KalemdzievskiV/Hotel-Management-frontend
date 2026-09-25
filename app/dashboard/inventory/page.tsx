@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getApiErrorMessage } from '@/lib/api/errors';
 import { inventoryApi, CreateInventoryItemDto, CreateInventoryTransactionDto } from '@/lib/api/inventory';
 import { hotelsApi } from '@/lib/api/hotels';
 import { useAuthStore } from '@/store/authStore';
@@ -100,6 +101,12 @@ export default function InventoryPage() {
             setTxnForm({ type: 1, quantity: 1 });
         },
     });
+
+    // Closing the dialog also clears a refused transaction's message
+    const setTransactionOpen = (open: boolean) => {
+        setShowTransaction(open);
+        if (!open) recordTxn.reset();
+    };
 
     const deleteItem = useMutation({
         mutationFn: (id: number) => inventoryApi.delete(id),
@@ -362,39 +369,39 @@ export default function InventoryPage() {
                     <DialogHeader><DialogTitle>Add Inventory Item</DialogTitle></DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label>Name</Label>
-                            <Input value={newItem.name ?? ''} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Bath Towels" />
+                            <Label htmlFor="inventory-name">Name</Label>
+                            <Input id="inventory-name" value={newItem.name ?? ''} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Bath Towels" />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <Label>Category</Label>
+                                <Label htmlFor="inventory-category">Category</Label>
                                 <Select value={String(newItem.category)} onValueChange={v => setNewItem(p => ({ ...p, category: Number(v) }))}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectTrigger id="inventory-category"><SelectValue /></SelectTrigger>
                                     <SelectContent>{CATEGORIES.map(c => <SelectItem key={c.value} value={String(c.value)}>{c.label}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                             <div>
-                                <Label>Unit</Label>
-                                <Input value={newItem.unit ?? 'pcs'} onChange={e => setNewItem(p => ({ ...p, unit: e.target.value }))} placeholder="pcs, kg, L..." />
+                                <Label htmlFor="inventory-unit">Unit</Label>
+                                <Input id="inventory-unit" value={newItem.unit ?? 'pcs'} onChange={e => setNewItem(p => ({ ...p, unit: e.target.value }))} placeholder="pcs, kg, L..." />
                             </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                             <div>
-                                <Label>Quantity</Label>
-                                <Input type="number" value={newItem.quantity ?? 0} onChange={e => setNewItem(p => ({ ...p, quantity: Number(e.target.value) }))} />
+                                <Label htmlFor="inventory-quantity">Quantity</Label>
+                                <Input id="inventory-quantity" type="number" value={newItem.quantity ?? 0} onChange={e => setNewItem(p => ({ ...p, quantity: Number(e.target.value) }))} />
                             </div>
                             <div>
-                                <Label>Min. Threshold</Label>
-                                <Input type="number" value={newItem.minimumThreshold ?? 5} onChange={e => setNewItem(p => ({ ...p, minimumThreshold: Number(e.target.value) }))} />
+                                <Label htmlFor="inventory-min-threshold">Min. Threshold</Label>
+                                <Input id="inventory-min-threshold" type="number" value={newItem.minimumThreshold ?? 5} onChange={e => setNewItem(p => ({ ...p, minimumThreshold: Number(e.target.value) }))} />
                             </div>
                             <div>
-                                <Label>Unit Cost ($)</Label>
-                                <Input type="number" step="0.01" value={newItem.unitCost ?? 0} onChange={e => setNewItem(p => ({ ...p, unitCost: Number(e.target.value) }))} />
+                                <Label htmlFor="inventory-unit-cost">Unit Cost ($)</Label>
+                                <Input id="inventory-unit-cost" type="number" step="0.01" value={newItem.unitCost ?? 0} onChange={e => setNewItem(p => ({ ...p, unitCost: Number(e.target.value) }))} />
                             </div>
                         </div>
                         <div>
-                            <Label>Supplier</Label>
-                            <Input value={newItem.supplier ?? ''} onChange={e => setNewItem(p => ({ ...p, supplier: e.target.value }))} placeholder="Optional" />
+                            <Label htmlFor="inventory-supplier">Supplier</Label>
+                            <Input id="inventory-supplier" value={newItem.supplier ?? ''} onChange={e => setNewItem(p => ({ ...p, supplier: e.target.value }))} placeholder="Optional" />
                         </div>
                     </div>
                     <DialogFooter>
@@ -407,35 +414,40 @@ export default function InventoryPage() {
             </Dialog>
 
             {/* Transaction Dialog */}
-            <Dialog open={showTransaction} onOpenChange={setShowTransaction}>
+            <Dialog open={showTransaction} onOpenChange={setTransactionOpen}>
                 <DialogContent className="max-w-sm">
                     <DialogHeader><DialogTitle>Record Transaction</DialogTitle></DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label>Item</Label>
+                            <Label htmlFor="inventory-item">Item</Label>
                             <Select value={String(txnForm.inventoryItemId ?? '')} onValueChange={v => setTxnForm(p => ({ ...p, inventoryItemId: Number(v) }))}>
-                                <SelectTrigger><SelectValue placeholder="Select item" /></SelectTrigger>
+                                <SelectTrigger id="inventory-item"><SelectValue placeholder="Select item" /></SelectTrigger>
                                 <SelectContent>{items?.map(i => <SelectItem key={i.id} value={String(i.id)}>{i.name}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <Label>Transaction Type</Label>
+                            <Label htmlFor="inventory-transaction-type">Transaction Type</Label>
                             <Select value={String(txnForm.type)} onValueChange={v => setTxnForm(p => ({ ...p, type: Number(v) }))}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectTrigger id="inventory-transaction-type"><SelectValue /></SelectTrigger>
                                 <SelectContent>{TRANSACTION_TYPES.map(t => <SelectItem key={t.value} value={String(t.value)}>{t.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <Label>Quantity</Label>
-                            <Input type="number" min={1} value={txnForm.quantity ?? 1} onChange={e => setTxnForm(p => ({ ...p, quantity: Number(e.target.value) }))} />
+                            <Label htmlFor="inventory-quantity-2">Quantity</Label>
+                            <Input id="inventory-quantity-2" type="number" min={1} value={txnForm.quantity ?? 1} onChange={e => setTxnForm(p => ({ ...p, quantity: Number(e.target.value) }))} />
                         </div>
                         <div>
-                            <Label>Notes (optional)</Label>
-                            <Input value={txnForm.notes ?? ''} onChange={e => setTxnForm(p => ({ ...p, notes: e.target.value }))} placeholder="e.g. Room 205 checkout" />
+                            <Label htmlFor="inventory-notes-optional">Notes (optional)</Label>
+                            <Input id="inventory-notes-optional" value={txnForm.notes ?? ''} onChange={e => setTxnForm(p => ({ ...p, notes: e.target.value }))} placeholder="e.g. Room 205 checkout" />
                         </div>
+                        {recordTxn.isError && (
+                            <p role="alert" className="text-sm text-red-600">
+                                {getApiErrorMessage(recordTxn.error, 'Could not record the transaction')}
+                            </p>
+                        )}
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowTransaction(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setTransactionOpen(false)}>Cancel</Button>
                         <Button onClick={() => recordTxn.mutate(txnForm as CreateInventoryTransactionDto)} disabled={!txnForm.inventoryItemId || recordTxn.isPending}>
                             {recordTxn.isPending ? 'Recording...' : 'Record'}
                         </Button>

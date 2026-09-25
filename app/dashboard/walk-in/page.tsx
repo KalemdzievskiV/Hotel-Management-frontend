@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { walkInApi, QuickCheckInDto, QuickGuestDto, GuestIntelligenceDto } from '@/lib/api/walk-in';
 import { hotelsApi } from '@/lib/api/hotels';
 import { guestsApi } from '@/lib/api/guests';
 import { reservationsApi } from '@/lib/api/reservations';
 import { useAuthStore } from '@/store/authStore';
+import { getApiErrorMessage } from '@/lib/api/errors';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,15 +24,13 @@ import {
     UserCheck, Search, Star, AlertTriangle, Clock, DollarSign,
     ChevronRight, BedDouble, LogIn, LogOut, History, Plus
 } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { format, addDays, differenceInCalendarDays } from 'date-fns';
+import { PaymentMethod, PaymentMethodLabels, ReservationStatus } from '@/types/enums';
 
+// Money is taken at the desk, so "Pay on Arrival" isn't offered
 const PAYMENT_METHODS = [
-    { value: 1, label: 'Cash' },
-    { value: 2, label: 'Credit Card' },
-    { value: 3, label: 'Debit Card' },
-    { value: 4, label: 'Bank Transfer' },
-    { value: 5, label: 'Online' },
-];
+    PaymentMethod.Cash, PaymentMethod.CreditCard, PaymentMethod.DebitCard, PaymentMethod.BankTransfer, PaymentMethod.Online,
+].map(value => ({ value, label: PaymentMethodLabels[value] }));
 
 const DISCOUNT_REASONS = [
     'Slow day',
@@ -48,6 +47,7 @@ type Step = 'guest' | 'room' | 'pricing' | 'confirm';
 
 export default function WalkInPage() {
     const { user } = useAuthStore();
+    const queryClient = useQueryClient();
     const [step, setStep] = useState<Step>('guest');
     const [selectedHotelId, setSelectedHotelId] = useState<number | null>(null);
     const [guestSearch, setGuestSearch] = useState('');
@@ -62,7 +62,7 @@ export default function WalkInPage() {
     const [discountAmount, setDiscountAmount] = useState(0);
     const [discountReason, setDiscountReason] = useState('');
     const [depositAmount, setDepositAmount] = useState(0);
-    const [paymentMethod, setPaymentMethod] = useState<number>(1);
+    const [paymentMethod, setPaymentMethod] = useState<number>(PaymentMethod.Cash);
     const [specialRequests, setSpecialRequests] = useState('');
     const [guestIntelligence, setGuestIntelligence] = useState<GuestIntelligenceDto | null>(null);
     const [showIntelligence, setShowIntelligence] = useState(false);
@@ -98,30 +98,46 @@ export default function WalkInPage() {
         queryKey: ['checked-in', hotelId],
         queryFn: () => reservationsApi.getByHotel(hotelId!),
         enabled: !!hotelId,
-        select: (data) => data.filter((r: any) => r.status === 'CheckedIn' || r.status === 3),
+        select: (data) => data.filter((r: any) => r.status === ReservationStatus.CheckedIn),
     });
 
     const quickCheckIn = useMutation({
         mutationFn: (dto: QuickCheckInDto) => walkInApi.quickCheckIn(dto),
         onSuccess: (result) => {
-            setSuccessMessage(`✅ Room ${selectedRoom?.roomNumber} checked in for ${selectedGuest?.firstName ?? newGuest.firstName} ${selectedGuest?.lastName ?? newGuest.lastName}`);
+            setSuccessMessage(`✅ Room ${selectedRoom?.roomNumber} checked in for ${result.guestName}`);
+            queryClient.invalidateQueries({ queryKey: ['checked-in', hotelId] });
+            queryClient.invalidateQueries({ queryKey: ['available-rooms', hotelId] });
             setStep('guest');
             setSelectedGuest(null);
             setSelectedRoom(null);
             setIsNewGuest(false);
             setNewGuest({});
+            setOverridePrice(null);
             setDiscountAmount(0);
+            setDiscountReason('');
             setDepositAmount(0);
+            setSpecialRequests('');
         },
     });
 
     const expressCheckout = useMutation({
         mutationFn: ({ id, dto }: { id: number; dto: any }) => walkInApi.expressCheckOut(id, dto),
-        onSuccess: () => {
-            setSuccessMessage('✅ Express checkout completed');
-            setShowExpressCheckout(false);
+        onSuccess: (result) => {
+            setSuccessMessage(`✅ Room ${result.roomNumber} checked out`);
+            closeExpressCheckout();
+            queryClient.invalidateQueries({ queryKey: ['checked-in', hotelId] });
+            queryClient.invalidateQueries({ queryKey: ['available-rooms', hotelId] });
         },
     });
+
+    function closeExpressCheckout() {
+        setShowExpressCheckout(false);
+        setCheckoutReservationId(null);
+        setExtraCharges(0);
+        setExtraChargesNotes('');
+        setFinalPayment(0);
+        expressCheckout.reset();
+    }
 
     const updateFlags = useMutation({
         mutationFn: ({ id, dto }: { id: number; dto: any }) => walkInApi.updateGuestFlags(id, dto),
@@ -136,7 +152,8 @@ export default function WalkInPage() {
     const basePrice = selectedRoom
         ? (overridePrice ?? selectedRoom.pricePerNight ?? 0)
         : 0;
-    const nights = Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)));
+    // Nights are counted by calendar date, the same way the API prices the stay
+    const nights = Math.max(1, differenceInCalendarDays(new Date(checkOut), new Date(checkIn)));
     const subtotal = basePrice * nights;
     const finalTotal = Math.max(0, subtotal - discountAmount);
 
@@ -150,7 +167,8 @@ export default function WalkInPage() {
             checkInDate: checkIn,
             checkOutDate: checkOut,
             numberOfGuests,
-            overridePrice: overridePrice ?? undefined,
+            // The form asks for a nightly rate; the API takes the price of the whole stay
+            overridePrice: overridePrice != null ? overridePrice * nights : undefined,
             discountAmount,
             discountReason: discountReason || undefined,
             depositAmount,
@@ -282,12 +300,12 @@ export default function WalkInPage() {
                                     ) : (
                                         <>
                                             <div className="grid grid-cols-2 gap-3">
-                                                <div><Label>First Name *</Label><Input value={newGuest.firstName ?? ''} onChange={e => setNewGuest(p => ({ ...p, firstName: e.target.value }))} /></div>
-                                                <div><Label>Last Name *</Label><Input value={newGuest.lastName ?? ''} onChange={e => setNewGuest(p => ({ ...p, lastName: e.target.value }))} /></div>
-                                                <div><Label>Email *</Label><Input type="email" value={newGuest.email ?? ''} onChange={e => setNewGuest(p => ({ ...p, email: e.target.value }))} /></div>
-                                                <div><Label>Phone *</Label><Input value={newGuest.phoneNumber ?? ''} onChange={e => setNewGuest(p => ({ ...p, phoneNumber: e.target.value }))} /></div>
-                                                <div><Label>ID/Passport</Label><Input value={newGuest.identificationNumber ?? ''} onChange={e => setNewGuest(p => ({ ...p, identificationNumber: e.target.value }))} /></div>
-                                                <div><Label>Nationality</Label><Input value={newGuest.nationality ?? ''} onChange={e => setNewGuest(p => ({ ...p, nationality: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-first-name">First Name *</Label><Input id="walkin-first-name" value={newGuest.firstName ?? ''} onChange={e => setNewGuest(p => ({ ...p, firstName: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-last-name">Last Name *</Label><Input id="walkin-last-name" value={newGuest.lastName ?? ''} onChange={e => setNewGuest(p => ({ ...p, lastName: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-email">Email *</Label><Input id="walkin-email" type="email" value={newGuest.email ?? ''} onChange={e => setNewGuest(p => ({ ...p, email: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-phone">Phone *</Label><Input id="walkin-phone" value={newGuest.phoneNumber ?? ''} onChange={e => setNewGuest(p => ({ ...p, phoneNumber: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-id-passport">ID/Passport</Label><Input id="walkin-id-passport" value={newGuest.identificationNumber ?? ''} onChange={e => setNewGuest(p => ({ ...p, identificationNumber: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-nationality">Nationality</Label><Input id="walkin-nationality" value={newGuest.nationality ?? ''} onChange={e => setNewGuest(p => ({ ...p, nationality: e.target.value }))} /></div>
                                             </div>
                                             <Button variant="ghost" size="sm" onClick={() => setIsNewGuest(false)}>← Back to search</Button>
                                         </>
@@ -314,12 +332,12 @@ export default function WalkInPage() {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <Label>Check-In</Label>
-                                            <Input type="datetime-local" value={checkIn} onChange={e => setCheckIn(e.target.value)} />
+                                            <Label htmlFor="walkin-check-in">Check-In</Label>
+                                            <Input id="walkin-check-in" type="datetime-local" value={checkIn} onChange={e => setCheckIn(e.target.value)} />
                                         </div>
                                         <div>
-                                            <Label>Check-Out</Label>
-                                            <Input type="datetime-local" value={checkOut} onChange={e => setCheckOut(e.target.value)} />
+                                            <Label htmlFor="walkin-check-out">Check-Out</Label>
+                                            <Input id="walkin-check-out" type="datetime-local" value={checkOut} onChange={e => setCheckOut(e.target.value)} />
                                         </div>
                                     </div>
                                     {roomsLoading ? <p className="text-gray-500 text-center py-4">Loading rooms...</p> : (
@@ -367,8 +385,8 @@ export default function WalkInPage() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <Label>Override Price ($/night)</Label>
-                                            <Input
+                                            <Label htmlFor="walkin-override-price-night">Override Price ($/night)</Label>
+                                            <Input id="walkin-override-price-night"
                                                 type="number"
                                                 step="0.01"
                                                 placeholder={String(selectedRoom?.pricePerNight ?? 0)}
@@ -377,35 +395,35 @@ export default function WalkInPage() {
                                             />
                                         </div>
                                         <div>
-                                            <Label>Discount Amount ($)</Label>
-                                            <Input type="number" step="0.01" value={discountAmount} onChange={e => setDiscountAmount(Number(e.target.value))} />
+                                            <Label htmlFor="walkin-discount-amount">Discount Amount ($)</Label>
+                                            <Input id="walkin-discount-amount" type="number" step="0.01" value={discountAmount} onChange={e => setDiscountAmount(Number(e.target.value))} />
                                         </div>
                                     </div>
                                     {discountAmount > 0 && (
                                         <div>
-                                            <Label>Discount Reason</Label>
+                                            <Label htmlFor="walkin-discount-reason">Discount Reason</Label>
                                             <Select value={discountReason} onValueChange={setDiscountReason}>
-                                                <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
+                                                <SelectTrigger id="walkin-discount-reason"><SelectValue placeholder="Select reason" /></SelectTrigger>
                                                 <SelectContent>{DISCOUNT_REASONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                                             </Select>
                                         </div>
                                     )}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <Label>Deposit ($)</Label>
-                                            <Input type="number" step="0.01" value={depositAmount} onChange={e => setDepositAmount(Number(e.target.value))} />
+                                            <Label htmlFor="walkin-deposit">Deposit ($)</Label>
+                                            <Input id="walkin-deposit" type="number" step="0.01" value={depositAmount} onChange={e => setDepositAmount(Number(e.target.value))} />
                                         </div>
                                         <div>
-                                            <Label>Payment Method</Label>
+                                            <Label htmlFor="walkin-payment-method">Payment Method</Label>
                                             <Select value={String(paymentMethod)} onValueChange={v => setPaymentMethod(Number(v))}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectTrigger id="walkin-payment-method"><SelectValue /></SelectTrigger>
                                                 <SelectContent>{PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>)}</SelectContent>
                                             </Select>
                                         </div>
                                     </div>
                                     <div>
-                                        <Label>Special Requests</Label>
-                                        <Input value={specialRequests} onChange={e => setSpecialRequests(e.target.value)} placeholder="Any notes or requests..." />
+                                        <Label htmlFor="walkin-special-requests">Special Requests</Label>
+                                        <Input id="walkin-special-requests" value={specialRequests} onChange={e => setSpecialRequests(e.target.value)} placeholder="Any notes or requests..." />
                                     </div>
                                     <div className="border-t pt-3 space-y-1 text-sm">
                                         <div className="flex justify-between"><span className="text-gray-600">Subtotal ({nights} nights)</span><span>${subtotal.toFixed(2)}</span></div>
@@ -446,7 +464,7 @@ export default function WalkInPage() {
                                     {selectedGuest?.isBlacklisted && (
                                         <div className="bg-red-50 border border-red-300 rounded-lg p-3 text-red-700 text-sm">
                                             <AlertTriangle className="h-4 w-4 inline mr-2" />
-                                            Warning: This guest is flagged. Proceeding overrides the restriction.
+                                            This guest is blacklisted and can&apos;t be checked in. An admin can lift the block on the guest&apos;s profile.
                                         </div>
                                     )}
                                     <div className="flex gap-3">
@@ -562,43 +580,48 @@ export default function WalkInPage() {
             </Dialog>
 
             {/* Express Checkout Dialog */}
-            <Dialog open={showExpressCheckout} onOpenChange={setShowExpressCheckout}>
+            <Dialog open={showExpressCheckout} onOpenChange={open => open ? setShowExpressCheckout(true) : closeExpressCheckout()}>
                 <DialogContent className="max-w-sm">
                     <DialogHeader><DialogTitle>Express Checkout</DialogTitle></DialogHeader>
                     <div className="space-y-4">
                         {!checkoutReservationId && (
                             <div>
-                                <Label>Select Reservation</Label>
+                                <Label htmlFor="walkin-select-reservation">Select Reservation</Label>
                                 <Select value={String(checkoutReservationId ?? '')} onValueChange={v => { setCheckoutReservationId(Number(v)); const r = checkedInReservations?.find((x: any) => x.id === Number(v)); setFinalPayment(r?.remainingAmount ?? 0); }}>
-                                    <SelectTrigger><SelectValue placeholder="Choose reservation" /></SelectTrigger>
+                                    <SelectTrigger id="walkin-select-reservation"><SelectValue placeholder="Choose reservation" /></SelectTrigger>
                                     <SelectContent>{checkedInReservations?.map((r: any) => <SelectItem key={r.id} value={String(r.id)}>Room {r.roomNumber} — {r.guestName}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                         )}
                         <div>
-                            <Label>Extra Charges ($)</Label>
-                            <Input type="number" step="0.01" value={extraCharges} onChange={e => setExtraCharges(Number(e.target.value))} placeholder="0.00" />
+                            <Label htmlFor="walkin-extra-charges">Extra Charges ($)</Label>
+                            <Input id="walkin-extra-charges" type="number" step="0.01" value={extraCharges} onChange={e => setExtraCharges(Number(e.target.value))} placeholder="0.00" />
                         </div>
                         {extraCharges > 0 && (
                             <div>
-                                <Label>Extra Charges Notes</Label>
-                                <Input value={extraChargesNotes} onChange={e => setExtraChargesNotes(e.target.value)} placeholder="Minibar, damages, etc." />
+                                <Label htmlFor="walkin-extra-charges-notes">Extra Charges Notes</Label>
+                                <Input id="walkin-extra-charges-notes" value={extraChargesNotes} onChange={e => setExtraChargesNotes(e.target.value)} placeholder="Minibar, damages, etc." />
                             </div>
                         )}
                         <div>
-                            <Label>Final Payment ($)</Label>
-                            <Input type="number" step="0.01" value={finalPayment} onChange={e => setFinalPayment(Number(e.target.value))} />
+                            <Label htmlFor="walkin-final-payment">Final Payment ($)</Label>
+                            <Input id="walkin-final-payment" type="number" step="0.01" value={finalPayment} onChange={e => setFinalPayment(Number(e.target.value))} />
                         </div>
                         <div>
-                            <Label>Payment Method</Label>
+                            <Label htmlFor="walkin-payment-method-2">Payment Method</Label>
                             <Select value={String(paymentMethod)} onValueChange={v => setPaymentMethod(Number(v))}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectTrigger id="walkin-payment-method-2"><SelectValue /></SelectTrigger>
                                 <SelectContent>{PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
+                        {expressCheckout.isError && (
+                            <p role="alert" className="text-sm text-red-600">
+                                {getApiErrorMessage(expressCheckout.error, 'Checkout failed')}
+                            </p>
+                        )}
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => { setShowExpressCheckout(false); setCheckoutReservationId(null); }}>Cancel</Button>
+                        <Button variant="outline" onClick={closeExpressCheckout}>Cancel</Button>
                         <Button
                             className="bg-red-600 hover:bg-red-700"
                             disabled={!checkoutReservationId || expressCheckout.isPending}

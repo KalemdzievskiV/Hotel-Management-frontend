@@ -29,6 +29,10 @@ async function call<T>(
   return (body ? JSON.parse(body) : undefined) as T;
 }
 
+/** Reads from the API as the given user, for checking what a journey left behind */
+export const apiGet = <T>(request: APIRequestContext, path: string, token: string) =>
+  call<T>(request, 'GET', path, token);
+
 export async function apiLogin(request: APIRequestContext, account: Pick<Account, 'email' | 'password'>) {
   const { token } = await call<{ token: string }>(request, 'POST', '/Auth/login', undefined, account);
   return token;

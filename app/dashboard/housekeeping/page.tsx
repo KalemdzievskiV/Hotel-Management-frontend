@@ -6,6 +6,7 @@ import { housekeepingApi, CreateHousekeepingTaskDto, UpdateHousekeepingTaskDto }
 import { hotelsApi } from '@/lib/api/hotels';
 import { roomsApi } from '@/lib/api/rooms';
 import { usePermissions } from '@/hooks/usePermissions';
+import { getApiErrorMessage } from '@/lib/api/errors';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -115,6 +116,12 @@ export default function HousekeepingPage() {
             setNewTask({ type: 1, priority: 2 });
         },
     });
+
+    // Closing the dialog also clears a refused task's message
+    const setCreateOpen = (open: boolean) => {
+        setShowCreate(open);
+        if (!open) createTask.reset();
+    };
 
     const startTask = useMutation({
         mutationFn: (id: number) => housekeepingApi.startTask(id),
@@ -398,7 +405,7 @@ export default function HousekeepingPage() {
             </div>
 
             {/* Create Task Dialog */}
-            <Dialog open={showCreate} onOpenChange={setShowCreate}>
+            <Dialog open={showCreate} onOpenChange={setCreateOpen}>
                 <DialogContent className="max-w-md">
                     <DialogHeader><DialogTitle>New Housekeeping Task</DialogTitle></DialogHeader>
                     <div className="space-y-4">
@@ -450,9 +457,14 @@ export default function HousekeepingPage() {
                             <Label>Notes (optional)</Label>
                             <Input value={newTask.notes ?? ''} onChange={e => setNewTask(p => ({ ...p, notes: e.target.value }))} placeholder="Any special instructions" />
                         </div>
+                        {createTask.isError && (
+                            <p role="alert" className="text-sm text-red-600">
+                                {getApiErrorMessage(createTask.error, 'Could not create the task')}
+                            </p>
+                        )}
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
                         <Button onClick={() => createTask.mutate(newTask as CreateHousekeepingTaskDto)} disabled={!newTask.roomId || createTask.isPending}>
                             {createTask.isPending ? 'Creating...' : 'Create Task'}
                         </Button>
