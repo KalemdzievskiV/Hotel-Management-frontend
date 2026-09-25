@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { StatusBadge } from '@/components/calendar/calendarUtils';
 import { getApiErrorMessage } from '@/lib/api/errors';
-import { BookingType, CreateGuestDto, CreateReservationDto, Reservation, ReservationStatus, UpdateReservationDto } from '@/types';
+import { BookingType, CreateGuestDto, CreateReservationDto, PaymentStatus, Reservation, ReservationStatus, UpdateReservationDto } from '@/types';
 import ReservationStatusActions from './dialog/ReservationStatusActions';
 import ReservationSummary from './dialog/ReservationSummary';
 import RoomSelectionFields from './dialog/RoomSelectionFields';
@@ -24,6 +24,11 @@ import StayFields from './dialog/StayFields';
 import { useReservationActions } from './dialog/useReservationActions';
 import { estimateTotal, getStayLength, validateReservationForm } from './dialog/validation';
 import { ReservationDialogMode, ReservationFormErrors } from './dialog/types';
+
+// Same rule as the API: a booking that hasn't started and has no money recorded (e.g. made by mistake)
+const canBeDeleted = (reservation: Reservation) =>
+  (reservation.status === ReservationStatus.Pending || reservation.status === ReservationStatus.Confirmed) &&
+  reservation.paymentStatus === PaymentStatus.Unpaid;
 
 /** Room (and optionally the stay) to preselect when creating a reservation */
 export type ReservationPrefill = {
