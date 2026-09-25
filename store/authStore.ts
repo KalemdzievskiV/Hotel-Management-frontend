@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authApi } from '@/lib/api';
-import { LoginDto, RegisterDto, AuthResponse } from '@/types';
+import { getApiErrorMessage } from '@/lib/api/errors';
+import { LoginDto, RegisterDto, AuthResponse, RegisterOwnerDto } from '@/types';
 
 interface AuthUser {
   email: string;
@@ -20,6 +21,8 @@ interface AuthStore {
   // Actions
   login: (credentials: LoginDto) => Promise<void>;
   register: (data: RegisterDto) => Promise<void>;
+  /** A hotel owner signs up and starts a free trial */
+  registerOwner: (data: RegisterOwnerDto) => Promise<void>;
   logout: () => void;
   setError: (error: string | null) => void;
   hasRole: (role: string) => boolean;
@@ -109,6 +112,29 @@ export const useAuthStore = create<AuthStore>()(
           const errorMessage = error.response?.data?.message || 'Registration failed';
           set({
             error: errorMessage,
+            isLoading: false,
+            isAuthenticated: false,
+            token: null,
+            user: null,
+          });
+          throw error;
+        }
+      },
+
+      registerOwner: async (data: RegisterOwnerDto) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response: AuthResponse = await authApi.registerOwner(data);
+          set({
+            token: response.token,
+            user: { email: response.email, fullName: response.fullName, roles: response.roles },
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error) {
+          set({
+            error: getApiErrorMessage(error, 'Sign-up failed'),
             isLoading: false,
             isAuthenticated: false,
             token: null,

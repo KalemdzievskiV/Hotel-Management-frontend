@@ -8,3 +8,4 @@ export * from './reservation';
 export * from './user';
 export * from './auth';
 export * from './api';
+export * from './billing';

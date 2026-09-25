@@ -57,6 +57,10 @@ export const usePermissions = () => {
     canViewAuditLogs: isSuperAdminRole,
     canManageSubscriptions: isSuperAdminRole,
 
+    // Hotel owners manage their own plan and staff
+    canManageBilling: isAdminRole && !isSuperAdminRole,
+    canManageStaff: isAdminRole && !isSuperAdminRole,
+
     // Dashboard access
     canAccessAdminDashboard: isSuperAdminRole || isAdminRole || isManagerRole,
     canAccessGuestDashboard: isGuestRole,

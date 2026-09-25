@@ -30,12 +30,17 @@ In development the login page lists the seeded demo accounts for each role.
 
 | Role        | Lands on                     | Navigation |
 |-------------|------------------------------|------------|
-| SuperAdmin  | `/dashboard/super-admin`     | Users, hotels |
-| Admin / Manager | `/dashboard/admin`       | Calendar, availability, hotels, rooms, reservations, guests, walk-in, inventory, housekeeping, reports |
+| SuperAdmin  | `/dashboard/super-admin`     | Users, hotels, subscriptions |
+| Admin / Manager | `/dashboard/admin`       | Calendar, availability, hotels, rooms, reservations, guests, walk-in, inventory, housekeeping, reports; Admins also Staff and Billing |
 | Housekeeper | `/dashboard/housekeeping`    | Housekeeping tasks for their hotel |
 | Guest       | `/dashboard/reservations`    | Their reservations, availability, calendar |
 
 The API enforces all access rules; the UI only hides what a role can't use (`hooks/usePermissions.ts`).
+
+Public pages: `/pricing` and `/register-hotel` (hotel owners sign up for a 30-day trial). When the API
+refuses something because of the owner's plan (402), `PlanLimitDialog` offers the upgrade, and
+`SubscriptionBanner` warns owners about ending trials and failed payments. Until a real payment
+provider is connected, `/dashboard/billing/checkout` is a test checkout that charges nothing.
 
 ## Project layout
 

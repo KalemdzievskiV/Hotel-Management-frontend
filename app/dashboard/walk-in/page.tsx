@@ -528,7 +528,7 @@ export default function WalkInPage() {
 
             {/* Guest Intelligence Dialog */}
             <Dialog open={showIntelligence} onOpenChange={setShowIntelligence}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Guest History — {guestIntelligence?.fullName}</DialogTitle>
                     </DialogHeader>
@@ -581,7 +581,7 @@ export default function WalkInPage() {
 
             {/* Express Checkout Dialog */}
             <Dialog open={showExpressCheckout} onOpenChange={open => open ? setShowExpressCheckout(true) : closeExpressCheckout()}>
-                <DialogContent className="max-w-sm">
+                <DialogContent className="sm:max-w-sm">
                     <DialogHeader><DialogTitle>Express Checkout</DialogTitle></DialogHeader>
                     <div className="space-y-4">
                         {!checkoutReservationId && (

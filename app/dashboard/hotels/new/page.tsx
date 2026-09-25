@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useCreateHotel } from '@/hooks/useHotels';
 import { useToast } from '@/components/ui/Toast';
@@ -19,7 +19,16 @@ import {
 } from '@/components/ui/select';
 import { CreateHotelDto } from '@/types';
 
+// useSearchParams needs a Suspense boundary in the App Router
 export default function NewHotelPage() {
+  return (
+    <Suspense>
+      <NewHotel />
+    </Suspense>
+  );
+}
+
+function NewHotel() {
   const router = useRouter();
   const { showToast } = useToast();
   const createHotel = useCreateHotel();
@@ -88,12 +97,22 @@ export default function NewHotelPage() {
     }
   };
 
+  // New owners arrive here straight after signing up (?welcome=1)
+  const welcome = useSearchParams().has('welcome');
+
   return (
     <DashboardLayout>
       <div className="max-w-4xl">
+        {welcome && (
+          <div role="status" className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-blue-900">
+            <p className="font-semibold">Welcome! Your 30-day trial of every feature has started.</p>
+            <p className="text-sm">Add your first hotel, then its rooms. You can invite staff from Staff and choose a plan in Billing.</p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Add New Hotel</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{welcome ? 'Add your first hotel' : 'Add New Hotel'}</h1>
           <p className="mt-1 text-gray-600">Create a new hotel property</p>
         </div>
 

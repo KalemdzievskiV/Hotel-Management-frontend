@@ -88,7 +88,7 @@ export default function ReservationDialog(props: ReservationDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[95vh] w-[95vw] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl max-h-[95vh] w-[95vw] overflow-y-auto">
         <ReservationDialogBody key={bodyKey} {...props} />
       </DialogContent>
     </Dialog>

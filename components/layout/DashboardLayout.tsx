@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import SubscriptionBanner from '@/components/billing/SubscriptionBanner';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -74,6 +75,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-8">
+          <SubscriptionBanner />
           {children}
         </main>
       </div>

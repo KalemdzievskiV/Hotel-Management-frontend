@@ -282,7 +282,7 @@ export default function UsersPage() {
 
         {/* Create User Dialog */}
         <Dialog open={createDialog} onOpenChange={setCreateDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
               <DialogDescription>

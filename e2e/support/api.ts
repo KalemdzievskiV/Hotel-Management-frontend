@@ -33,6 +33,10 @@ async function call<T>(
 export const apiGet = <T>(request: APIRequestContext, path: string, token: string) =>
   call<T>(request, 'GET', path, token);
 
+/** A hotel owner signing up on their own (they start on a trial) */
+export const registerOwner = (request: APIRequestContext, account: Account) =>
+  call(request, 'POST', '/Auth/register-owner', undefined, account);
+
 export async function apiLogin(request: APIRequestContext, account: Pick<Account, 'email' | 'password'>) {
   const { token } = await call<{ token: string }>(request, 'POST', '/Auth/login', undefined, account);
   return token;

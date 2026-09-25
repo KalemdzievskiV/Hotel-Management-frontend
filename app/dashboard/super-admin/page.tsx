@@ -6,6 +6,8 @@ import { useAuthStore } from '@/store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import { hotelsApi } from '@/lib/api';
 import { usersApi } from '@/lib/api/users';
+import { adminSubscriptionsApi } from '@/lib/api/billing';
+import { formatMoney } from '@/components/billing/planDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
@@ -47,6 +49,11 @@ export default function SuperAdminDashboard() {
   const { data: usersByRole, isLoading: loadingRoles } = useQuery({
     queryKey: ['users', 'count-by-role'],
     queryFn: usersApi.getCountByRole,
+  });
+
+  const { data: subscriptionStats } = useQuery({
+    queryKey: ['admin-subscriptions', 'stats'],
+    queryFn: adminSubscriptionsApi.getStats,
   });
 
   const { data: usersList } = useQuery({
@@ -145,6 +152,47 @@ export default function SuperAdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Subscriptions */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Subscriptions
+            </CardTitle>
+            <button
+              onClick={() => router.push('/dashboard/super-admin/subscriptions')}
+              className="text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              Manage subscriptions
+            </button>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div>
+                <dt className="text-sm text-gray-500">Monthly revenue</dt>
+                <dd className="text-2xl font-bold">
+                  {subscriptionStats ? formatMoney(subscriptionStats.monthlyRevenue, subscriptionStats.currency) : '...'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">Paying</dt>
+                <dd className="text-2xl font-bold">{subscriptionStats?.paying ?? '...'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">On trial</dt>
+                <dd className="text-2xl font-bold">{subscriptionStats?.trialing ?? '...'}</dd>
+                {!!subscriptionStats?.trialsEndingSoon && (
+                  <dd className="text-xs text-amber-700">{subscriptionStats.trialsEndingSoon} ending within 7 days</dd>
+                )}
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">Payment failed</dt>
+                <dd className="text-2xl font-bold">{subscriptionStats?.pastDue ?? '...'}</dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

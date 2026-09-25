@@ -34,6 +34,12 @@ export default function RegisterPage() {
               Sign in
             </Link>
           </p>
+          <p className="mt-2 text-sm text-gray-600">
+            Registering a hotel instead?{' '}
+            <Link href="/register-hotel" className="font-medium text-blue-600 hover:text-blue-500">
+              Start a free trial for owners
+            </Link>
+          </p>
         </div>
       </div>
     </div>

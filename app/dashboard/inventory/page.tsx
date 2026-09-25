@@ -365,7 +365,7 @@ export default function InventoryPage() {
 
             {/* Add Item Dialog */}
             <Dialog open={showAddItem} onOpenChange={setShowAddItem}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader><DialogTitle>Add Inventory Item</DialogTitle></DialogHeader>
                     <div className="space-y-4">
                         <div>
@@ -415,7 +415,7 @@ export default function InventoryPage() {
 
             {/* Transaction Dialog */}
             <Dialog open={showTransaction} onOpenChange={setTransactionOpen}>
-                <DialogContent className="max-w-sm">
+                <DialogContent className="sm:max-w-sm">
                     <DialogHeader><DialogTitle>Record Transaction</DialogTitle></DialogHeader>
                     <div className="space-y-4">
                         <div>

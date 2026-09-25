@@ -37,6 +37,11 @@ export default function Sidebar() {
           href: '/dashboard/hotels',
           icon: '🏨',
         },
+        {
+          name: 'Subscriptions',
+          href: '/dashboard/super-admin/subscriptions',
+          icon: '💳',
+        },
       ];
     }
     
@@ -137,6 +142,18 @@ export default function Sidebar() {
         href: '/dashboard/reports',
         icon: '📈',
         permission: 'canAccessAdminDashboard',
+      },
+      {
+        name: 'Staff',
+        href: '/dashboard/staff',
+        icon: '🧑‍💼',
+        permission: 'canManageStaff',
+      },
+      {
+        name: 'Billing',
+        href: '/dashboard/billing',
+        icon: '💳',
+        permission: 'canManageBilling',
       },
     ];
   };

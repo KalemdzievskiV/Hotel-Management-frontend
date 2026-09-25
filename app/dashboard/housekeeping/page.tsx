@@ -406,7 +406,7 @@ export default function HousekeepingPage() {
 
             {/* Create Task Dialog */}
             <Dialog open={showCreate} onOpenChange={setCreateOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader><DialogTitle>New Housekeeping Task</DialogTitle></DialogHeader>
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-3">

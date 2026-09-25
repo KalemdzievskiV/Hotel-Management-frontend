@@ -1,5 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import { useAuthStore } from '@/store/authStore';
+import { usePlanLimitStore } from '@/store/planLimitStore';
+import { PlanLimitDetails } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
@@ -49,6 +51,12 @@ apiClient.interceptors.response.use(
         }
       }
       
+      // The owner's plan doesn't allow this: offer an upgrade (the page still gets the error)
+      const body = error.response.data as { message?: string; data?: PlanLimitDetails } | undefined;
+      if (status === 402 && body?.data?.code === 'plan_limit') {
+        usePlanLimitStore.getState().show({ ...body.data, message: body.message ?? 'Your plan does not include this.' });
+      }
+
       if (status === 403) {
         // Forbidden - log but don't redirect (let the component handle it)
         console.warn('Access forbidden:', error.config?.url);

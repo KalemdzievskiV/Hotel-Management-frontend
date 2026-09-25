@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { LoginDto, RegisterDto, AuthResponse } from '@/types';
+import { LoginDto, RegisterDto, AuthResponse, RegisterOwnerDto } from '@/types';
 
 export const authApi = {
   // POST /api/Auth/login
@@ -14,6 +14,12 @@ export const authApi = {
       ...data,
       role: 'Guest', // Public registration is always Guest
     });
+    return response.data;
+  },
+
+  // POST /api/Auth/register-owner: a hotel owner starts a free trial
+  registerOwner: async (data: RegisterOwnerDto): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/Auth/register-owner', data);
     return response.data;
   },
 };
