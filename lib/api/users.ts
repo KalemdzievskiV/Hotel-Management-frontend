@@ -89,8 +89,8 @@ export const usersApi = {
 
   // GET /api/Users/stats/count
   getCount: async (): Promise<number> => {
-    const response = await apiClient.get<number>('/Users/stats/count');
-    return response.data;
+    const response = await apiClient.get<{ totalUsers: number }>('/Users/stats/count');
+    return response.data.totalUsers;
   },
 
   // GET /api/Users/stats/by-role
