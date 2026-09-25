@@ -50,8 +50,8 @@ export default function RoomSelectionFields({
 
       <div>
         <Label htmlFor="hotel">Hotel *</Label>
-        <Select value={formData.hotelId?.toString()} onValueChange={(value) => onHotelChange(parseInt(value))} disabled={disabled}>
-          <SelectTrigger className={errors.hotelId ? 'border-red-500' : ''}>
+        <Select value={formData.hotelId ? formData.hotelId.toString() : ''} onValueChange={(value) => onHotelChange(parseInt(value))} disabled={disabled}>
+          <SelectTrigger className={`w-full ${errors.hotelId ? 'border-red-500' : ''}`}>
             <SelectValue placeholder="Select hotel" />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={5}>
@@ -88,14 +88,14 @@ export default function RoomSelectionFields({
         <div>
           <Label htmlFor="room">Room *</Label>
           <Select
-            value={formData.roomId?.toString()}
+            value={formData.roomId ? formData.roomId.toString() : ''}
             onValueChange={(value) => {
               const room = rooms.find(r => r.id === parseInt(value));
               if (room) onRoomChange(room);
             }}
             disabled={!formData.hotelId || disabled}
           >
-            <SelectTrigger className={errors.roomId ? 'border-red-500' : ''}>
+            <SelectTrigger className={`w-full ${errors.roomId ? 'border-red-500' : ''}`}>
               <SelectValue placeholder="Select room" />
             </SelectTrigger>
             <SelectContent position="popper" sideOffset={5}>

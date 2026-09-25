@@ -88,8 +88,8 @@ export default function GuestFields({
         </div>
       ) : (
         <>
-          <Select value={guestId ? guestId.toString() : undefined} onValueChange={(value) => onGuestChange(parseInt(value))} disabled={disabled}>
-            <SelectTrigger className={errors.guestId ? 'border-red-500' : ''}>
+          <Select value={guestId ? guestId.toString() : ''} onValueChange={(value) => onGuestChange(parseInt(value))} disabled={disabled}>
+            <SelectTrigger className={`w-full ${errors.guestId ? 'border-red-500' : ''}`}>
               <SelectValue placeholder="Select guest" />
             </SelectTrigger>
             <SelectContent position="popper" sideOffset={5}>

@@ -36,7 +36,7 @@ export default function StayFields({
           onValueChange={(value) => onChange({ bookingType: parseInt(value) })}
           disabled={bookingTypeLocked}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={5}>

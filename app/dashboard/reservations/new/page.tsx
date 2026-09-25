@@ -214,7 +214,7 @@ export default function NewReservationPage() {
                 <Label htmlFor="hotelId">Hotel *</Label>
                 <Select
                   name="hotelId"
-                  value={formData.hotelId.toString()}
+                  value={formData.hotelId ? formData.hotelId.toString() : ''}
                   onValueChange={(value) => handleChange({ target: { name: 'hotelId', value } } as any)}
                 >
                   <SelectTrigger className={errors.hotelId ? 'border-red-500' : ''}>
@@ -235,7 +235,7 @@ export default function NewReservationPage() {
                 <Label htmlFor="roomId">Room *</Label>
                 <Select
                   name="roomId"
-                  value={formData.roomId.toString()}
+                  value={formData.roomId ? formData.roomId.toString() : ''}
                   onValueChange={(value) => handleChange({ target: { name: 'roomId', value } } as any)}
                   disabled={!selectedHotelId}
                 >
@@ -257,7 +257,7 @@ export default function NewReservationPage() {
                 <Label htmlFor="guestId">Guest *</Label>
                 <Select
                   name="guestId"
-                  value={formData.guestId.toString()}
+                  value={formData.guestId ? formData.guestId.toString() : ''}
                   onValueChange={(value) => handleChange({ target: { name: 'guestId', value } } as any)}
                 >
                   <SelectTrigger className={errors.guestId ? 'border-red-500' : ''}>

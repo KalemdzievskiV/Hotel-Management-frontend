@@ -147,7 +147,7 @@ export default function NewRoomPage() {
                 <Label htmlFor="hotelId">Hotel *</Label>
                 <Select
                   name="hotelId"
-                  value={formData.hotelId.toString()}
+                  value={formData.hotelId ? formData.hotelId.toString() : ''}
                   onValueChange={(value) => handleChange({ target: { name: 'hotelId', value, type: 'select' } } as any)}
                 >
                   <SelectTrigger className={errors.hotelId ? 'border-red-500' : ''}>
