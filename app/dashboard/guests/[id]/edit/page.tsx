@@ -106,12 +106,10 @@ export default function EditGuestPage() {
     const newErrors: Partial<Record<keyof UpdateGuestDto, string>> = {};
 
     if (!formData.firstName?.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName?.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email?.trim()) newErrors.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Last name, email and phone are optional: walk-ins often only give a first name
+    if (formData.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email address';
     }
-    if (!formData.phoneNumber?.trim()) newErrors.phoneNumber = 'Phone number is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -221,7 +219,7 @@ export default function EditGuestPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
                   name="lastName"
@@ -233,7 +231,7 @@ export default function EditGuestPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -246,7 +244,7 @@ export default function EditGuestPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number *</Label>
+                <Label htmlFor="phoneNumber">Phone Number</Label>
                 <Input
                   id="phoneNumber"
                   type="tel"

@@ -43,9 +43,9 @@ export default function GuestFields({
     );
   }
 
-  const walkInInput = (field: keyof CreateGuestDto, label: string, placeholder: string, type = 'text') => (
+  const walkInInput = (field: keyof CreateGuestDto, label: string, placeholder: string, type = 'text', required = false) => (
     <div>
-      <Label htmlFor={`walkIn-${field}`} className="text-xs">{label} *</Label>
+      <Label htmlFor={`walkIn-${field}`} className="text-xs">{label}{required && ' *'}</Label>
       <Input
         id={`walkIn-${field}`}
         type={type}
@@ -76,11 +76,11 @@ export default function GuestFields({
             <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
             <div className="text-xs text-blue-800">
               <p className="font-semibold">Quick Walk-in Guest</p>
-              <p>Enter required info. You can add more details later from the Guests page.</p>
+              <p>Only the first name is required. You can add more details later from the Guests page.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {walkInInput('firstName', 'First Name', 'John')}
+            {walkInInput('firstName', 'First Name', 'John', 'text', true)}
             {walkInInput('lastName', 'Last Name', 'Doe')}
             {walkInInput('email', 'Email', 'john.doe@email.com', 'email')}
             {walkInInput('phoneNumber', 'Phone Number', '+1234567890', 'tel')}

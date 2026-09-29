@@ -3,9 +3,9 @@ import { Room, Reservation } from '@/types';
 
 export interface QuickGuestDto {
     firstName: string;
-    lastName: string;
-    email: string;
-    phoneNumber: string;
+    lastName?: string;
+    email?: string;
+    phoneNumber?: string;
     identificationNumber?: string;
     identificationType?: string;
     nationality?: string;
