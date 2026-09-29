@@ -143,6 +143,8 @@ export default function EditRoomPage() {
       parsedValue = parseFloat(value) || 0;
     } else if (name === 'type' || name === 'status') {
       parsedValue = parseInt(value, 10);
+      // Radix Select can emit '' (e.g. from its hidden native select) — never store NaN
+      if (Number.isNaN(parsedValue)) return;
     }
     
     setFormData((prev) => ({
@@ -222,8 +224,7 @@ export default function EditRoomPage() {
               <div className="space-y-2">
                 <Label htmlFor="type">Room Type *</Label>
                 <Select
-                  name="type"
-                  value={formData.type?.toString() || '0'}
+                  value={formData.type?.toString() ?? ''}
                   onValueChange={(value) => handleChange({ target: { name: 'type', value, type: 'select' } } as any)}
                 >
                   <SelectTrigger>
@@ -414,8 +415,7 @@ export default function EditRoomPage() {
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 <Select
-                  name="status"
-                  value={formData.status?.toString() || '0'}
+                  value={formData.status?.toString() ?? ''}
                   onValueChange={(value) => handleChange({ target: { name: 'status', value, type: 'select' } } as any)}
                 >
                   <SelectTrigger>

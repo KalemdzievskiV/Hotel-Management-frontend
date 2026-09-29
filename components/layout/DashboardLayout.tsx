@@ -74,7 +74,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-8">
+        {/* relative: keeps absolutely-positioned hidden inputs (e.g. Radix Select's native select) inside the scroll area */}
+        <main className="relative flex-1 overflow-y-auto p-4 md:p-6 pb-8">
           <SubscriptionBanner />
           {children}
         </main>
