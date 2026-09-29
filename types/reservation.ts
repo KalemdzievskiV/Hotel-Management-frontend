@@ -26,6 +26,9 @@ export interface Reservation {
   paymentStatus: PaymentStatus;
   paymentMethod?: PaymentMethod;
   paymentReference?: string;
+  /** Difference from the room's default price: positive = discount, negative = surcharge */
+  discountAmount?: number;
+  discountReason?: string;
   
   // Notes
   specialRequests?: string;
@@ -68,6 +71,9 @@ export interface CreateReservationDto {
   paymentReference?: string;
   specialRequests?: string;
   notes?: string;
+  /** Staff only: charge this instead of the room's default price (higher or lower) */
+  overridePrice?: number;
+  overridePriceReason?: string;
 }
 
 export interface UpdateReservationDto {

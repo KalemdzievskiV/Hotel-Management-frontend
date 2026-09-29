@@ -44,10 +44,8 @@ export function validateReservationForm(options: {
 
   if (walkInGuest) {
     if (!walkInGuest.firstName?.trim()) errors.firstName = 'First name is required';
-    if (!walkInGuest.lastName?.trim()) errors.lastName = 'Last name is required';
-    if (!walkInGuest.email?.trim()) errors.email = 'Email is required';
-    else if (!EMAIL_PATTERN.test(walkInGuest.email)) errors.email = 'Invalid email format';
-    if (!walkInGuest.phoneNumber?.trim()) errors.phoneNumber = 'Phone number is required';
+    // Last name, email and phone are optional; only check the email's format when one is given
+    if (walkInGuest.email?.trim() && !EMAIL_PATTERN.test(walkInGuest.email)) errors.email = 'Invalid email format';
   } else if (requireGuest && !formData.guestId) {
     errors.guestId = 'Guest is required';
   }
@@ -66,6 +64,10 @@ export function validateReservationForm(options: {
 
   if (formData.bookingType === BookingType.ShortStay && room && !room.allowsShortStay) {
     errors.roomId = 'Selected room does not allow short-stay bookings';
+  }
+
+  if (formData.overridePrice != null && (Number.isNaN(formData.overridePrice) || formData.overridePrice < 0)) {
+    errors.overridePrice = 'Price cannot be negative';
   }
 
   if (room && formData.numberOfGuests > room.capacity) {

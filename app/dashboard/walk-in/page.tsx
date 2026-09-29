@@ -256,7 +256,7 @@ export default function WalkInPage() {
                                                         <button key={g.id} className="w-full text-left p-3 hover:bg-blue-50 flex items-center justify-between" onClick={() => { setSelectedGuest(g); setGuestSearch(''); }}>
                                                             <div>
                                                                 <p className="font-medium">{g.firstName} {g.lastName}</p>
-                                                                <p className="text-sm text-gray-500">{g.email} · {g.phoneNumber}</p>
+                                                                <p className="text-sm text-gray-500">{[g.email, g.phoneNumber].filter(Boolean).join(' · ')}</p>
                                                             </div>
                                                             <div className="flex gap-1">
                                                                 {g.isVIP && <Badge className="bg-yellow-100 text-yellow-800">VIP</Badge>}
@@ -275,7 +275,7 @@ export default function WalkInPage() {
                                                                 {selectedGuest.isVIP && <Badge className="bg-yellow-100 text-yellow-800"><Star className="h-3 w-3 mr-1" />VIP</Badge>}
                                                                 {selectedGuest.isBlacklisted && <Badge variant="destructive"><AlertTriangle className="h-3 w-3 mr-1" />Blocked</Badge>}
                                                             </div>
-                                                            <p className="text-sm text-gray-600">{selectedGuest.email} · {selectedGuest.phoneNumber}</p>
+                                                            <p className="text-sm text-gray-600">{[selectedGuest.email, selectedGuest.phoneNumber].filter(Boolean).join(' · ')}</p>
                                                         </div>
                                                         <div className="flex gap-2">
                                                             <Button size="sm" variant="outline" onClick={() => loadGuestIntelligence(selectedGuest.id)}>
@@ -301,9 +301,9 @@ export default function WalkInPage() {
                                         <>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div><Label htmlFor="walkin-first-name">First Name *</Label><Input id="walkin-first-name" value={newGuest.firstName ?? ''} onChange={e => setNewGuest(p => ({ ...p, firstName: e.target.value }))} /></div>
-                                                <div><Label htmlFor="walkin-last-name">Last Name *</Label><Input id="walkin-last-name" value={newGuest.lastName ?? ''} onChange={e => setNewGuest(p => ({ ...p, lastName: e.target.value }))} /></div>
-                                                <div><Label htmlFor="walkin-email">Email *</Label><Input id="walkin-email" type="email" value={newGuest.email ?? ''} onChange={e => setNewGuest(p => ({ ...p, email: e.target.value }))} /></div>
-                                                <div><Label htmlFor="walkin-phone">Phone *</Label><Input id="walkin-phone" value={newGuest.phoneNumber ?? ''} onChange={e => setNewGuest(p => ({ ...p, phoneNumber: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-last-name">Last Name</Label><Input id="walkin-last-name" value={newGuest.lastName ?? ''} onChange={e => setNewGuest(p => ({ ...p, lastName: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-email">Email</Label><Input id="walkin-email" type="email" value={newGuest.email ?? ''} onChange={e => setNewGuest(p => ({ ...p, email: e.target.value }))} /></div>
+                                                <div><Label htmlFor="walkin-phone">Phone</Label><Input id="walkin-phone" value={newGuest.phoneNumber ?? ''} onChange={e => setNewGuest(p => ({ ...p, phoneNumber: e.target.value }))} /></div>
                                                 <div><Label htmlFor="walkin-id-passport">ID/Passport</Label><Input id="walkin-id-passport" value={newGuest.identificationNumber ?? ''} onChange={e => setNewGuest(p => ({ ...p, identificationNumber: e.target.value }))} /></div>
                                                 <div><Label htmlFor="walkin-nationality">Nationality</Label><Input id="walkin-nationality" value={newGuest.nationality ?? ''} onChange={e => setNewGuest(p => ({ ...p, nationality: e.target.value }))} /></div>
                                             </div>
@@ -312,7 +312,7 @@ export default function WalkInPage() {
                                     )}
                                     <Button
                                         className="w-full"
-                                        disabled={!selectedGuest && !(isNewGuest && newGuest.firstName && newGuest.email && newGuest.phoneNumber)}
+                                        disabled={!selectedGuest && !(isNewGuest && newGuest.firstName?.trim())}
                                         onClick={() => setStep('room')}
                                     >
                                         Next: Select Room <ChevronRight className="h-4 w-4 ml-1" />
@@ -385,8 +385,8 @@ export default function WalkInPage() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <Label htmlFor="walkin-override-price-night">Override Price ($/night)</Label>
-                                            <Input id="walkin-override-price-night"
+                                            <Label htmlFor="walkin-override-price-night">Price ($/night, higher or lower)</Label>
+                                            <Input id="walkin-override-price-night" min="0"
                                                 type="number"
                                                 step="0.01"
                                                 placeholder={String(selectedRoom?.pricePerNight ?? 0)}
@@ -452,7 +452,7 @@ export default function WalkInPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between py-2 border-b"><span className="text-gray-500">Guest</span><span className="font-medium">{selectedGuest ? `${selectedGuest.firstName} ${selectedGuest.lastName}` : `${newGuest.firstName} ${newGuest.lastName} (new)`}</span></div>
+                                        <div className="flex justify-between py-2 border-b"><span className="text-gray-500">Guest</span><span className="font-medium">{selectedGuest ? `${selectedGuest.firstName} ${selectedGuest.lastName}` : `${newGuest.firstName} ${newGuest.lastName ?? ''} (new)`}</span></div>
                                         <div className="flex justify-between py-2 border-b"><span className="text-gray-500">Room</span><span className="font-medium">Room {selectedRoom?.roomNumber} ({selectedRoom?.type})</span></div>
                                         <div className="flex justify-between py-2 border-b"><span className="text-gray-500">Check-In</span><span className="font-medium">{format(new Date(checkIn), 'MMM d, yyyy HH:mm')}</span></div>
                                         <div className="flex justify-between py-2 border-b"><span className="text-gray-500">Check-Out</span><span className="font-medium">{format(new Date(checkOut), 'MMM d, yyyy HH:mm')}</span></div>

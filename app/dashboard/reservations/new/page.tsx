@@ -123,6 +123,15 @@ export default function NewReservationPage() {
       }
     }
 
+    if (formData.overridePrice != null && (Number.isNaN(formData.overridePrice) || formData.overridePrice < 0)) {
+      newErrors.overridePrice = 'Price cannot be negative';
+    }
+
+    const finalPrice = formData.overridePrice ?? calculatedAmount;
+    if (formData.depositAmount && finalPrice > 0 && formData.depositAmount > finalPrice) {
+      newErrors.depositAmount = `Deposit cannot be more than the price ($${finalPrice.toFixed(2)})`;
+    }
+
     if (selectedRoom && formData.numberOfGuests > selectedRoom.capacity) {
       newErrors.numberOfGuests = `Room capacity is ${selectedRoom.capacity} guests`;
     }
@@ -147,6 +156,13 @@ export default function NewReservationPage() {
       if (!cleanedData.paymentReference) delete cleanedData.paymentReference;
       if (!cleanedData.specialRequests) delete cleanedData.specialRequests;
       if (!cleanedData.notes) delete cleanedData.notes;
+      // Only send a price when it was actually changed from the default
+      if (cleanedData.overridePrice == null || cleanedData.overridePrice === calculatedAmount) {
+        delete cleanedData.overridePrice;
+        delete cleanedData.overridePriceReason;
+      } else if (!cleanedData.overridePriceReason) {
+        delete cleanedData.overridePriceReason;
+      }
       if (formData.bookingType === BookingType.Daily) {
         delete cleanedData.durationInHours;
       }
@@ -387,13 +403,46 @@ export default function NewReservationPage() {
           {/* Pricing */}
           {calculatedAmount > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-blue-900 mb-2">Estimated Total</h2>
-              <p className="text-3xl font-bold text-blue-900">${calculatedAmount.toFixed(2)}</p>
-              {formData.bookingType === BookingType.Daily && formData.checkInDate && formData.checkOutDate && (
-                <p className="text-sm text-blue-700 mt-1">
-                  {Math.ceil((new Date(formData.checkOutDate).getTime() - new Date(formData.checkInDate).getTime()) / (1000 * 60 * 60 * 24))} night(s) × ${selectedRoom?.pricePerNight}/night
-                </p>
-              )}
+              <h2 className="text-lg font-semibold text-blue-900 mb-2">Price</h2>
+              <p className="text-sm text-blue-700">
+                Default: <span className="font-semibold">${calculatedAmount.toFixed(2)}</span>
+                {formData.bookingType === BookingType.Daily && formData.checkInDate && formData.checkOutDate && (
+                  <> ({Math.ceil((new Date(formData.checkOutDate).getTime() - new Date(formData.checkInDate).getTime()) / (1000 * 60 * 60 * 24))} night(s) × ${selectedRoom?.pricePerNight}/night)</>
+                )}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="overridePrice">Price to Charge ($, whole stay)</Label>
+                  <Input
+                    id="overridePrice"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder={calculatedAmount.toFixed(2)}
+                    value={formData.overridePrice ?? ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      overridePrice: e.target.value === '' ? undefined : Number(e.target.value),
+                    }))}
+                    className={`bg-white ${errors.overridePrice ? 'border-red-500' : ''}`}
+                  />
+                  <p className="text-xs text-blue-700">Leave empty to charge the default. Can be higher or lower.</p>
+                  {errors.overridePrice && <p className="text-sm text-red-600">{errors.overridePrice}</p>}
+                </div>
+                {formData.overridePrice != null && formData.overridePrice !== calculatedAmount && (
+                  <div className="space-y-2">
+                    <Label htmlFor="overridePriceReason">Reason (optional)</Label>
+                    <Input
+                      id="overridePriceReason"
+                      value={formData.overridePriceReason ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, overridePriceReason: e.target.value }))}
+                      placeholder="e.g. Regular customer, extra bed"
+                      maxLength={200}
+                      className="bg-white"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -415,7 +464,9 @@ export default function NewReservationPage() {
                   min="0"
                   step="0.01"
                   placeholder="0.00"
+                  className={errors.depositAmount ? 'border-red-500' : ''}
                 />
+                {errors.depositAmount && <p className="text-sm text-red-600">{errors.depositAmount}</p>}
               </div>
 
               <div className="space-y-2">

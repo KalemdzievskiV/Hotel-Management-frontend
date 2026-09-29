@@ -56,6 +56,14 @@ export default function ReservationSummary({ reservation }: { reservation: Reser
         <Field label="Total Amount" icon={<DollarSign className="h-4 w-4 text-green-600" />}>
           <span className="font-bold text-lg">${reservation.totalAmount || 0}</span>
         </Field>
+        {!!reservation.discountAmount && (
+          <Field label={reservation.discountAmount > 0 ? 'Discount' : 'Surcharge'}>
+            <span className="text-sm">
+              {reservation.discountAmount > 0 ? '-' : '+'}${Math.abs(reservation.discountAmount).toFixed(2)}
+              {reservation.discountReason && <span className="text-gray-500"> · {reservation.discountReason}</span>}
+            </span>
+          </Field>
+        )}
         <Field label="Number of Guests">
           <span className="font-medium">{reservation.numberOfGuests}</span>
         </Field>

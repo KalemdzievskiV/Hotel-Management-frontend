@@ -18,10 +18,12 @@ interface StayFieldsProps {
   bookingTypeLocked: boolean;
   /** Internal notes are for staff only */
   showInternalNotes: boolean;
+  /** Staff can charge a different price than the room's default when creating a booking */
+  canSetPrice: boolean;
 }
 
 export default function StayFields({
-  formData, onChange, selectedRoom, estimatedTotal, errors, stayLocked, bookingTypeLocked, showInternalNotes,
+  formData, onChange, selectedRoom, estimatedTotal, errors, stayLocked, bookingTypeLocked, showInternalNotes, canSetPrice,
 }: StayFieldsProps) {
   const isShortStay = formData.bookingType === BookingType.ShortStay;
   // Overnight stays are dates; short stays need a time too
@@ -113,7 +115,42 @@ export default function StayFields({
         )}
       </div>
 
-      {estimatedTotal > 0 && (
+      {canSetPrice && estimatedTotal > 0 ? (
+        <div className="bg-green-50 border border-green-200 rounded-md p-3 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="overridePrice" className="text-xs text-green-800">Price to Charge ($, whole stay)</Label>
+              <Input
+                id="overridePrice"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder={estimatedTotal.toFixed(2)}
+                value={formData.overridePrice ?? ''}
+                onChange={(e) => onChange({ overridePrice: e.target.value === '' ? undefined : Number(e.target.value) })}
+                className={`bg-white ${errors.overridePrice ? 'border-red-500' : ''}`}
+              />
+              <p className="text-xs text-green-800 mt-1">
+                Default price: ${estimatedTotal.toFixed(2)}. Leave empty to charge the default.
+              </p>
+              <FieldError message={errors.overridePrice} />
+            </div>
+            {formData.overridePrice != null && formData.overridePrice !== estimatedTotal && (
+              <div>
+                <Label htmlFor="overridePriceReason" className="text-xs text-green-800">Reason (optional)</Label>
+                <Input
+                  id="overridePriceReason"
+                  value={formData.overridePriceReason ?? ''}
+                  onChange={(e) => onChange({ overridePriceReason: e.target.value })}
+                  placeholder="e.g. Regular customer, extra bed"
+                  maxLength={200}
+                  className="bg-white"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      ) : estimatedTotal > 0 && (
         <div className="bg-green-50 border border-green-200 rounded-md p-3">
           <Label className="text-xs text-green-800">Estimated Total</Label>
           <p className="text-2xl font-bold text-green-600">${estimatedTotal.toFixed(2)}</p>

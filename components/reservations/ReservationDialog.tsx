@@ -190,7 +190,15 @@ function ReservationDialogBody({
           showToast('Walk-in guest created', 'success');
         }
 
-        await createReservation.mutateAsync({ ...formData, guestId, durationInHours });
+        // Only send a price when staff actually changed it from the default
+        const priceChanged = !isGuest && formData.overridePrice != null && formData.overridePrice !== estimatedTotal;
+        await createReservation.mutateAsync({
+          ...formData,
+          guestId,
+          durationInHours,
+          overridePrice: priceChanged ? formData.overridePrice : undefined,
+          overridePriceReason: priceChanged ? formData.overridePriceReason : undefined,
+        });
         showToast('Reservation created successfully', 'success');
       } else {
         await updateReservation.mutateAsync({
@@ -300,6 +308,7 @@ function ReservationDialogBody({
                 stayLocked={finished}
                 bookingTypeLocked={mode !== 'create'}
                 showInternalNotes={!isGuest}
+                canSetPrice={mode === 'create' && !isGuest}
               />
             </div>
           )}
