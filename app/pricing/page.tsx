@@ -6,25 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { billingApi } from '@/lib/api/billing';
 import { BillingInterval } from '@/types';
 import PlanCards, { IntervalToggle } from '@/components/billing/PlanCards';
-
-const questions = [
-  {
-    q: 'What happens when the trial ends?',
-    a: "You move to the Free plan unless you choose a paid one. Nothing is deleted: rooms, reservations and guests stay, you just can't add more than the Free plan allows.",
-  },
-  {
-    q: 'Do I need a card to start?',
-    a: 'No. The 30-day trial of Pro starts as soon as you sign up, without any payment details.',
-  },
-  {
-    q: 'Can I change or cancel my plan later?',
-    a: 'Yes, at any time from Billing. Upgrades apply straight away; downgrades and cancellations take effect at the end of the period you paid for.',
-  },
-  {
-    q: 'Can I pay by bank transfer?',
-    a: 'Yes. Contact us and we will send an invoice; your plan is activated when the payment arrives.',
-  },
-];
+import { pricingQuestions } from '@/components/billing/pricingFaq';
 
 export default function PricingPage() {
   const [interval, setInterval] = useState<BillingInterval>('Monthly');
@@ -33,7 +15,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 sm:px-6">
-        <Link href="/pricing" className="flex items-center gap-2 font-bold text-gray-900">
+        <Link href="/" className="flex items-center gap-2 font-bold text-gray-900">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-lg" aria-hidden="true">🏨</span>
           Hotel Manager
         </Link>
@@ -79,7 +61,7 @@ export default function PricingPage() {
         <section className="mx-auto mt-20 max-w-3xl" aria-labelledby="faq">
           <h2 id="faq" className="text-2xl font-bold text-gray-900">Questions</h2>
           <dl className="mt-6 divide-y divide-gray-200">
-            {questions.map(item => (
+            {pricingQuestions.map(item => (
               <div key={item.q} className="py-5">
                 <dt className="font-semibold text-gray-900">{item.q}</dt>
                 <dd className="mt-2 text-gray-600">{item.a}</dd>
