@@ -8,8 +8,17 @@ import {
   CancelReservationDto,
   ReservationStatus,
   BookingType,
-  Room
+  Room,
+  PagedResult
 } from '@/types';
+
+export interface ReservationPageParams {
+  hotelId?: number;
+  status?: ReservationStatus;
+  q?: string;
+  page: number;
+  pageSize: number;
+}
 
 export interface AvailableRoomsParams {
   hotelId: number;
@@ -33,6 +42,14 @@ export const reservationsApi = {
   // GET /api/Reservations
   getAll: async (): Promise<Reservation[]> => {
     const response = await apiClient.get<Reservation[]>('/Reservations');
+    return response.data;
+  },
+
+  // GET /api/Reservations/paged — one page, newest first, scoped to the caller like getAll
+  getPage: async (params: ReservationPageParams): Promise<PagedResult<Reservation>> => {
+    const response = await apiClient.get<PagedResult<Reservation>>('/Reservations/paged', {
+      params: { ...params, q: params.q || undefined },
+    });
     return response.data;
   },
 

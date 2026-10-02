@@ -17,6 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Pagination } from '@/components/ui/pagination';
+import { usePagination } from '@/hooks/usePagination';
 import {
   Dialog,
   DialogContent,
@@ -138,6 +140,7 @@ export default function UsersPage() {
     user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const { pageItems: pagedUsers, paginationProps } = usePagination(filteredUsers, { resetKey: searchTerm });
 
   const resetForm = () => {
     setNewUser({
@@ -201,6 +204,7 @@ export default function UsersPage() {
               <p className="mt-2 text-gray-600">Loading users...</p>
             </div>
           ) : filteredUsers && filteredUsers.length > 0 ? (
+            <>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -215,7 +219,7 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => (
+                  {pagedUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="font-medium text-gray-900">{user.fullName}</div>
@@ -273,6 +277,8 @@ export default function UsersPage() {
                 </TableBody>
               </Table>
             </div>
+              <Pagination {...paginationProps} />
+            </>
           ) : (
             <div className="p-8 text-center text-gray-500">
               {searchTerm ? 'No users found matching your search.' : 'No users yet. Create your first user!'}

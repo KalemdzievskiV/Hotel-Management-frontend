@@ -20,6 +20,8 @@ import {
   formatDate, formatMoney, statusBadgeClass, statusLabels, subscriptionSummary,
 } from '@/components/billing/planDisplay';
 import { SubscriptionDetail, SubscriptionFilter, SubscriptionPlan, SubscriptionSummary } from '@/types';
+import { Pagination } from '@/components/ui/pagination';
+import { usePagination } from '@/hooks/usePagination';
 
 const filters: { value: SubscriptionFilter; label: string }[] = [
   { value: 'All', label: 'All' },
@@ -296,6 +298,7 @@ export default function SubscriptionsPage() {
     queryKey: ['admin-subscriptions', filter, search],
     queryFn: () => adminSubscriptionsApi.list(filter, search),
   });
+  const { pageItems: pagedSubscriptions, paginationProps } = usePagination(subscriptions, { resetKey: [filter, search] });
 
   const runJob = useMutation({
     mutationFn: () => adminSubscriptionsApi.simulate('RunMaintenance'),
@@ -385,7 +388,7 @@ export default function SubscriptionsPage() {
                 {subscriptions?.length === 0 && (
                   <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No owners match.</td></tr>
                 )}
-                {subscriptions?.map(s => (
+                {pagedSubscriptions.map(s => (
                   <tr key={s.ownerId} className="cursor-pointer hover:bg-gray-50" onClick={() => setSelected(s.ownerId)}>
                     <td className="px-4 py-3">
                       <button type="button" className="text-left font-medium text-gray-900 hover:underline" onClick={() => setSelected(s.ownerId)}>
@@ -409,6 +412,7 @@ export default function SubscriptionsPage() {
                 ))}
               </tbody>
             </table>
+            <Pagination {...paginationProps} />
           </CardContent>
         </Card>
       </div>

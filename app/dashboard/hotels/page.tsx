@@ -18,6 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Pagination } from '@/components/ui/pagination';
+import { usePagination } from '@/hooks/usePagination';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +49,7 @@ export default function HotelsPage() {
     hotel.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
     hotel.country.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const { pageItems: pagedHotels, paginationProps } = usePagination(filteredHotels, { resetKey: searchTerm });
 
   const handleDelete = async (id: number) => {
     try {
@@ -105,6 +108,7 @@ export default function HotelsPage() {
               <p className="mt-2 text-gray-600">Loading hotels...</p>
             </div>
           ) : filteredHotels && filteredHotels.length > 0 ? (
+            <>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -119,7 +123,7 @@ export default function HotelsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredHotels.map((hotel) => (
+                  {pagedHotels.map((hotel) => (
                     <TableRow key={hotel.id}>
                       <TableCell>
                         <div>
@@ -191,6 +195,8 @@ export default function HotelsPage() {
               </TableBody>
             </Table>
             </div>
+            <Pagination {...paginationProps} />
+            </>
           ) : (
             <div className="p-8 text-center text-gray-500">
               {searchTerm ? 'No hotels found matching your search.' : 'No hotels yet. Create your first hotel!'}

@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/select';
 import { ClipboardList, CheckCircle, Clock, AlertCircle, Plus, Play, Check, Wand2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Pagination } from '@/components/ui/pagination';
+import { usePagination } from '@/hooks/usePagination';
 
 const TASK_TYPES = [
     { value: 1, label: 'Clean Room' },
@@ -100,6 +102,7 @@ export default function HousekeepingPage() {
         queryFn: () => housekeepingApi.getTasks(hotelId!),
         enabled: !!hotelId,
     });
+    const { pageItems: pagedTasks, paginationProps: taskPagination } = usePagination(allTasks, { resetKey: hotelId });
 
     const { data: performance } = useQuery({
         queryKey: ['housekeeping-performance', hotelId],
@@ -324,7 +327,7 @@ export default function HousekeepingPage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {allTasks?.map(task => (
+                                            {pagedTasks.map(task => (
                                                 <tr key={task.id} className="border-b hover:bg-gray-50">
                                                     <td className="p-4 font-semibold text-blue-600">{task.roomNumber}</td>
                                                     <td className="p-4">{task.typeName}</td>
@@ -354,6 +357,7 @@ export default function HousekeepingPage() {
                                         </tbody>
                                     </table>
                                 </div>
+                                <Pagination {...taskPagination} />
                             </CardContent>
                         </Card>
                     </TabsContent>

@@ -25,6 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Pagination } from '@/components/ui/pagination';
+import { usePagination } from '@/hooks/usePagination';
 import {
   Dialog,
   DialogContent,
@@ -68,6 +70,7 @@ export default function RoomsPage() {
     
     return matchesSearch && matchesHotel;
   });
+  const { pageItems: pagedRooms, paginationProps } = usePagination(filteredRooms, { resetKey: [searchTerm, selectedHotelId] });
 
   const handleDelete = async (id: number) => {
     try {
@@ -179,6 +182,7 @@ export default function RoomsPage() {
               <p className="mt-2 text-gray-600">Loading rooms...</p>
             </div>
           ) : filteredRooms && filteredRooms.length > 0 ? (
+            <>
             <div className="overflow-x-auto">
               <Table>
               <TableHeader>
@@ -204,7 +208,7 @@ export default function RoomsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                  {filteredRooms.map((room) => (
+                  {pagedRooms.map((room) => (
                   <TableRow key={room.id}>
                     <TableCell>
                         <div>
@@ -313,6 +317,8 @@ export default function RoomsPage() {
               </TableBody>
             </Table>
             </div>
+            <Pagination {...paginationProps} />
+            </>
           ) : (
             <div className="p-8 text-center text-gray-500">
               {searchTerm || selectedHotelId ? 'No rooms found matching your filters.' : 'No rooms yet. Create your first room!'}

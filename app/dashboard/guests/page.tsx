@@ -19,6 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Pagination } from '@/components/ui/pagination';
+import { usePagination } from '@/hooks/usePagination';
 import {
   Dialog,
   DialogContent,
@@ -66,6 +68,7 @@ export default function GuestsPage() {
     
     return matchesSearch && matchesHotel && matchesType;
   });
+  const { pageItems: pagedGuests, paginationProps } = usePagination(filteredGuests, { resetKey: [searchTerm, selectedHotelId, guestTypeFilter] });
 
   const handleDelete = async (id: number) => {
     try {
@@ -159,6 +162,7 @@ export default function GuestsPage() {
               <p className="mt-2 text-gray-600">Loading guests...</p>
             </div>
           ) : filteredGuests && filteredGuests.length > 0 ? (
+            <>
             <div className="overflow-x-auto">
               <Table>
               <TableHeader>
@@ -184,7 +188,7 @@ export default function GuestsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                  {filteredGuests.map((guest) => (
+                  {pagedGuests.map((guest) => (
                   <TableRow key={guest.id}>
                     <TableCell>
                         <div>
@@ -261,6 +265,8 @@ export default function GuestsPage() {
               </TableBody>
             </Table>
             </div>
+            <Pagination {...paginationProps} />
+            </>
           ) : (
             <div className="p-8 text-center text-gray-500">
               {searchTerm || selectedHotelId || guestTypeFilter !== 'all' 

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useReservations, useConfirmReservation, useCheckIn, useCheckOut, useCancelReservation } from '@/hooks/useReservations';
+import { useReservationsPage, useConfirmReservation, useCheckIn, useCheckOut, useCancelReservation } from '@/hooks/useReservations';
 import { useToast } from '@/components/ui/Toast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery } from '@tanstack/react-query';
@@ -23,6 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,6 @@ export default function ReservationsPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const permissions = usePermissions();
-  const { data: reservations, isLoading, error } = useReservations();
   
   // Only fetch hotels if user can view all reservations (Admin/Manager/SuperAdmin)
   const { data: hotels } = useQuery({
@@ -64,19 +64,37 @@ export default function ReservationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cancelDialog, setCancelDialog] = useState<{ id: number; guestName: string } | null>(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
-  // Filter reservations
-  const filteredReservations = reservations?.filter((reservation) => {
-    const matchesSearch = 
-      reservation.guestName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reservation.roomNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reservation.id.toString().includes(searchTerm);
-    
-    const matchesHotel = selectedHotelId === 'all' || reservation.hotelId.toString() === selectedHotelId;
-    const matchesStatus = statusFilter === 'all' || reservation.status.toString() === statusFilter;
-    
-    return matchesSearch && matchesHotel && matchesStatus;
+  // Search runs on the server, so wait for a pause in typing before asking
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // New filters start again from the first page (set while rendering, so no stale page is fetched)
+  const filterToken = JSON.stringify([debouncedSearch, selectedHotelId, statusFilter, pageSize]);
+  const [seenFilters, setSeenFilters] = useState(filterToken);
+  if (seenFilters !== filterToken) {
+    setSeenFilters(filterToken);
+    setPage(1);
+  }
+
+  const { data: reservationPage, isLoading, isPlaceholderData, error } = useReservationsPage({
+    hotelId: selectedHotelId === 'all' ? undefined : Number(selectedHotelId),
+    status: statusFilter === 'all' ? undefined : (Number(statusFilter) as ReservationStatus),
+    q: debouncedSearch,
+    page,
+    pageSize,
   });
+  const filteredReservations = reservationPage?.items;
+
+  // The last row of the last page went away (e.g. deleted): step back to the page that still exists
+  if (reservationPage && !isPlaceholderData && reservationPage.items.length === 0 && reservationPage.totalCount > 0 && page > 1) {
+    setPage(Math.ceil(reservationPage.totalCount / pageSize));
+  }
 
   const handleConfirm = async (id: number) => {
     try {
@@ -227,13 +245,14 @@ export default function ReservationsPage() {
         </Card>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className={`bg-white rounded-lg shadow overflow-hidden transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
           {isLoading ? (
             <div className="p-8 text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <p className="mt-2 text-gray-600">Loading reservations...</p>
             </div>
           ) : filteredReservations && filteredReservations.length > 0 ? (
+            <>
             <div className="overflow-x-auto">
               <Table>
               <TableHeader>
@@ -355,9 +374,19 @@ export default function ReservationsPage() {
               </TableBody>
             </Table>
             </div>
+            {reservationPage && (
+              <Pagination
+                page={reservationPage.page}
+                pageSize={reservationPage.pageSize}
+                totalCount={reservationPage.totalCount}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
+            </>
           ) : (
             <div className="p-8 text-center text-gray-500">
-              {searchTerm || selectedHotelId || statusFilter !== 'all' 
+              {debouncedSearch || selectedHotelId !== 'all' || statusFilter !== 'all' 
                 ? 'No reservations found matching your filters.' 
                 : 'No reservations yet. Create your first reservation!'}
             </div>

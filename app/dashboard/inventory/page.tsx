@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { AlertTriangle, Package, TrendingDown, DollarSign, Plus, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { Pagination } from '@/components/ui/pagination';
+import { usePagination } from '@/hooks/usePagination';
 
 const CATEGORIES = [
     { value: 1, label: 'Linens' },
@@ -74,6 +76,8 @@ export default function InventoryPage() {
         queryFn: () => inventoryApi.getTransactions(hotelId!),
         enabled: !!hotelId,
     });
+    const { pageItems: pagedItems, paginationProps: itemPagination } = usePagination(items, { resetKey: hotelId });
+    const { pageItems: pagedTransactions, paginationProps: transactionPagination } = usePagination(transactions, { resetKey: hotelId });
 
     const { data: costAnalysis } = useQuery({
         queryKey: ['inventory-cost', hotelId],
@@ -222,6 +226,7 @@ export default function InventoryPage() {
                                 {isLoading ? (
                                     <div className="p-8 text-center text-gray-500">Loading inventory...</div>
                                 ) : (
+                                    <>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <thead>
@@ -237,7 +242,7 @@ export default function InventoryPage() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {items?.map(item => (
+                                                {pagedItems.map(item => (
                                                     <tr key={item.id} className="border-b hover:bg-gray-50">
                                                         <td className="p-4 font-medium">{item.name}</td>
                                                         <td className="p-4">
@@ -274,6 +279,8 @@ export default function InventoryPage() {
                                             </tbody>
                                         </table>
                                     </div>
+                                    <Pagination {...itemPagination} />
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -297,7 +304,7 @@ export default function InventoryPage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {transactions?.map(t => {
+                                            {pagedTransactions.map(t => {
                                                 const txType = TRANSACTION_TYPES.find(x => x.value === t.type);
                                                 return (
                                                     <tr key={t.id} className="border-b hover:bg-gray-50">
@@ -321,6 +328,7 @@ export default function InventoryPage() {
                                         </tbody>
                                     </table>
                                 </div>
+                                <Pagination {...transactionPagination} />
                             </CardContent>
                         </Card>
                     </TabsContent>

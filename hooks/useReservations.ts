@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { reservationsApi } from '@/lib/api';
+import type { ReservationPageParams } from '@/lib/api/reservations';
 import { Reservation, CreateReservationDto, UpdateReservationDto, RecordPaymentDto, CancelReservationDto } from '@/types';
 
 // Query Keys
@@ -22,6 +23,15 @@ export function useReservations() {
   return useQuery({
     queryKey: reservationKeys.lists(),
     queryFn: () => reservationsApi.getAll(),
+  });
+}
+
+// One page of reservations; the previous page stays on screen while the next one loads
+export function useReservationsPage(params: ReservationPageParams) {
+  return useQuery({
+    queryKey: reservationKeys.list(params),
+    queryFn: () => reservationsApi.getPage(params),
+    placeholderData: keepPreviousData,
   });
 }
 
