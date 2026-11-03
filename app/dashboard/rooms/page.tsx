@@ -233,9 +233,9 @@ export default function RoomsPage() {
                         <div className="text-sm text-gray-900">
                           ${room.pricePerNight}/night
                         </div>
-                        {room.allowsShortStay && room.shortStayHourlyRate && (
+                        {room.allowsShortStay && room.shortStayPrice != null && (
                           <div className="text-sm text-gray-500">
-                            ${room.shortStayHourlyRate}/hour
+                            ${room.shortStayPrice}/{room.shortStayHours ?? 4}h short stay
                           </div>
                         )}
                     </TableCell>

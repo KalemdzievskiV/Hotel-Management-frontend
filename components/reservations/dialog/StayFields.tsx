@@ -20,10 +20,12 @@ interface StayFieldsProps {
   showInternalNotes: boolean;
   /** Staff can charge a different price than the room's default when creating a booking */
   canSetPrice: boolean;
+  /** Booking type and check-in/out inputs; hidden when the stay picker is used instead */
+  showStayInputs?: boolean;
 }
 
 export default function StayFields({
-  formData, onChange, selectedRoom, estimatedTotal, errors, stayLocked, bookingTypeLocked, showInternalNotes, canSetPrice,
+  formData, onChange, selectedRoom, estimatedTotal, errors, stayLocked, bookingTypeLocked, showInternalNotes, canSetPrice, showStayInputs = true,
 }: StayFieldsProps) {
   const isShortStay = formData.bookingType === BookingType.ShortStay;
   // Overnight stays are dates; short stays need a time too
@@ -31,6 +33,7 @@ export default function StayFields({
 
   return (
     <>
+      {showStayInputs && (<>
       <div>
         <Label htmlFor="bookingType">Booking Type *</Label>
         <Select
@@ -43,7 +46,7 @@ export default function StayFields({
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={5}>
             <SelectItem value={BookingType.Daily.toString()}>Daily (Overnight)</SelectItem>
-            <SelectItem value={BookingType.ShortStay.toString()}>Short-Stay (Hourly)</SelectItem>
+            <SelectItem value={BookingType.ShortStay.toString()}>Short Stay</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -84,6 +87,7 @@ export default function StayFields({
           <FieldError message={errors.checkOutDate} />
         </div>
       </div>
+      </>)}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -108,9 +112,9 @@ export default function StayFields({
 
         {isShortStay && formData.durationInHours && (
           <div>
-            <Label>Duration</Label>
+            <Label>Short Stay Length</Label>
             <Input type="text" value={`${formData.durationInHours} hours`} disabled className="bg-gray-50" />
-            <p className="text-xs text-gray-500 mt-1">Auto-calculated</p>
+            
           </div>
         )}
       </div>

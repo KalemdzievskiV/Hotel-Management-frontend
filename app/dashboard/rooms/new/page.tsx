@@ -35,6 +35,7 @@ export default function NewRoomPage() {
     capacity: 1,
     pricePerNight: 0,
     allowsShortStay: false,
+    shortStayHours: 4,
     description: '',
     amenities: '',
     status: RoomStatus.Available,
@@ -58,18 +59,11 @@ export default function NewRoomPage() {
     if (!formData.pricePerNight || formData.pricePerNight < 0) newErrors.pricePerNight = 'Price per night is required';
     
     if (formData.allowsShortStay) {
-      if (!formData.shortStayHourlyRate || formData.shortStayHourlyRate < 0) {
-        newErrors.shortStayHourlyRate = 'Hourly rate is required for short-stay rooms';
+      if (!formData.shortStayHours || formData.shortStayHours < 1 || formData.shortStayHours > 23) {
+        newErrors.shortStayHours = 'Short stay length must be between 1 and 23 hours';
       }
-      if (formData.minimumShortStayHours && formData.minimumShortStayHours < 1) {
-        newErrors.minimumShortStayHours = 'Minimum hours must be at least 1';
-      }
-      if (formData.maximumShortStayHours && formData.maximumShortStayHours > 24) {
-        newErrors.maximumShortStayHours = 'Maximum hours cannot exceed 24';
-      }
-      if (formData.minimumShortStayHours && formData.maximumShortStayHours && 
-          formData.minimumShortStayHours > formData.maximumShortStayHours) {
-        newErrors.maximumShortStayHours = 'Maximum hours must be greater than minimum hours';
+      if (!formData.shortStayPrice || formData.shortStayPrice <= 0) {
+        newErrors.shortStayPrice = 'Short stay price is required';
       }
     }
 
@@ -269,58 +263,45 @@ export default function NewRoomPage() {
                   onCheckedChange={(checked) => handleChange({ target: { name: 'allowsShortStay', checked, type: 'checkbox' } } as any)}
                 />
                 <Label htmlFor="allowsShortStay" className="font-medium cursor-pointer">
-                  Allow Short-Stay (Hourly) Bookings
+                  Allow Short-Stay Bookings
                 </Label>
               </div>
 
               {formData.allowsShortStay && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pl-6 border-l-2 border-blue-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-6 border-l-2 border-blue-200">
                   <div className="space-y-2">
-                    <Label htmlFor="shortStayHourlyRate">Hourly Rate *</Label>
+                    <Label htmlFor="shortStayHours">Short Stay Length (hours) *</Label>
                     <Input
-                      id="shortStayHourlyRate"
+                      id="shortStayHours"
                       type="number"
-                      name="shortStayHourlyRate"
-                      value={formData.shortStayHourlyRate || ''}
+                      name="shortStayHours"
+                      value={formData.shortStayHours || ''}
+                      onChange={handleChange}
+                      min="1"
+                      max="23"
+                      step="1"
+                      className={errors.shortStayHours ? 'border-red-500' : ''}
+                      placeholder="4"
+                    />
+                    <p className="text-xs text-gray-500">Staff can book more or fewer hours when needed.</p>
+                    {errors.shortStayHours && <p className="text-sm text-red-600">{errors.shortStayHours}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="shortStayPrice">Short Stay Price *</Label>
+                    <Input
+                      id="shortStayPrice"
+                      type="number"
+                      name="shortStayPrice"
+                      value={formData.shortStayPrice || ''}
                       onChange={handleChange}
                       min="0"
                       step="0.01"
-                      className={errors.shortStayHourlyRate ? 'border-red-500' : ''}
-                      placeholder="25.00"
+                      className={errors.shortStayPrice ? 'border-red-500' : ''}
+                      placeholder="100.00"
                     />
-                    {errors.shortStayHourlyRate && <p className="text-sm text-red-600">{errors.shortStayHourlyRate}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="minimumShortStayHours">Minimum Hours</Label>
-                    <Input
-                      id="minimumShortStayHours"
-                      type="number"
-                      name="minimumShortStayHours"
-                      value={formData.minimumShortStayHours || ''}
-                      onChange={handleChange}
-                      min="1"
-                      max="24"
-                      className={errors.minimumShortStayHours ? 'border-red-500' : ''}
-                      placeholder="2"
-                    />
-                    {errors.minimumShortStayHours && <p className="text-sm text-red-600">{errors.minimumShortStayHours}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="maximumShortStayHours">Maximum Hours</Label>
-                    <Input
-                      id="maximumShortStayHours"
-                      type="number"
-                      name="maximumShortStayHours"
-                      value={formData.maximumShortStayHours || ''}
-                      onChange={handleChange}
-                      min="1"
-                      max="24"
-                      className={errors.maximumShortStayHours ? 'border-red-500' : ''}
-                      placeholder="12"
-                    />
-                    {errors.maximumShortStayHours && <p className="text-sm text-red-600">{errors.maximumShortStayHours}</p>}
+                    <p className="text-xs text-gray-500">Flat price for the whole short stay, not per hour.</p>
+                    {errors.shortStayPrice && <p className="text-sm text-red-600">{errors.shortStayPrice}</p>}
                   </div>
                 </div>
               )}

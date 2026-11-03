@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreateReservationDto, Hotel, Room } from '@/types';
-import { AvailabilityCalendar } from '../AvailabilityCalendar';
+import { BookingType, CreateReservationDto, Hotel, Room } from '@/types';
 import { FieldError, ReservationFormErrors } from './types';
+
+/** Which rooms are free for the picked stay; absent until the stay is complete */
+export interface RoomAvailability {
+  loading: boolean;
+  availableRoomIds: Set<number> | null;
+}
 
 interface RoomSelectionFieldsProps {
   formData: CreateReservationDto;
@@ -13,45 +15,53 @@ interface RoomSelectionFieldsProps {
   rooms: Room[];
   selectedRoom: Room | null;
   errors: ReservationFormErrors;
-  /** Availability search only makes sense when creating */
-  allowAvailabilitySearch: boolean;
   disabled: boolean;
+  /** Filters the room list when creating; omitted when editing */
+  availability?: RoomAvailability;
   onHotelChange: (hotelId: number) => void;
   onRoomChange: (room: Room) => void;
-  onClearErrors: () => void;
+  /** Rendered between the hotel and the room, e.g. the stay picker */
+  children?: React.ReactNode;
+}
+
+function roomLabel(room: Room, bookingType: BookingType) {
+  const price = bookingType === BookingType.ShortStay
+    ? `$${room.shortStayPrice ?? 0} short stay`
+    : `$${room.pricePerNight}/night`;
+  return `Room ${room.roomNumber} (${price}, Cap: ${room.capacity})`;
 }
 
 export default function RoomSelectionFields({
-  formData, hotels, rooms, selectedRoom, errors, allowAvailabilitySearch, disabled,
-  onHotelChange, onRoomChange, onClearErrors,
+  formData, hotels, rooms, selectedRoom, errors, disabled, availability, onHotelChange, onRoomChange, children,
 }: RoomSelectionFieldsProps) {
-  const [searchAvailability, setSearchAvailability] = useState(false);
+  const singleHotel = hotels.length === 1;
+  const availableIds = availability?.availableRoomIds ?? null;
+  const shortStay = formData.bookingType === BookingType.ShortStay;
+
+  // Once the stay is known only free rooms are offered; the selected room stays listed so the
+  // field can show it, marked as taken
+  const listedRooms = availableIds
+    ? rooms.filter(r => availableIds.has(r.id) || r.id === formData.roomId)
+    : shortStay ? rooms.filter(r => r.allowsShortStay || r.id === formData.roomId) : rooms;
+  const selectedTaken = !!availableIds && !!formData.roomId && !availableIds.has(formData.roomId);
+
+  let roomHint: string | null = null;
+  if (availability && formData.hotelId) {
+    if (availability.loading) roomHint = 'Checking which rooms are free…';
+    else if (availableIds) roomHint = `${availableIds.size} of ${rooms.length} rooms free for this stay`;
+    else roomHint = 'Pick the stay to see which rooms are free';
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Label className="text-base font-semibold">Room Selection</Label>
-        {allowAvailabilitySearch && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSearchAvailability(!searchAvailability);
-              onClearErrors();
-            }}
-            className="text-xs h-7"
-          >
-            <Search className="h-3 w-3 mr-1" />
-            {searchAvailability ? 'Manual Selection' : 'Search Available'}
-          </Button>
-        )}
-      </div>
-
       <div>
         <Label htmlFor="hotel">Hotel *</Label>
-        <Select value={formData.hotelId ? formData.hotelId.toString() : ''} onValueChange={(value) => onHotelChange(parseInt(value))} disabled={disabled}>
-          <SelectTrigger className={`w-full ${errors.hotelId ? 'border-red-500' : ''}`}>
+        <Select
+          value={formData.hotelId ? formData.hotelId.toString() : ''}
+          onValueChange={(value) => onHotelChange(parseInt(value))}
+          disabled={disabled || singleHotel}
+        >
+          <SelectTrigger id="hotel" className={`w-full ${errors.hotelId ? 'border-red-500' : ''}`}>
             <SelectValue placeholder="Select hotel" />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={5}>
@@ -63,59 +73,44 @@ export default function RoomSelectionFields({
         <FieldError message={errors.hotelId} />
       </div>
 
-      {searchAvailability ? (
-        formData.hotelId ? (
-          <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
-            <AvailabilityCalendar
-              hotelId={formData.hotelId}
-              defaultCheckIn={formData.checkInDate}
-              defaultCheckOut={formData.checkOutDate}
-              defaultBookingType={formData.bookingType}
-              onRoomSelect={(room) => {
-                onRoomChange(room);
-                setSearchAvailability(false);
-              }}
-              selectedRoomId={formData.roomId || undefined}
-              compact
-            />
+      {children}
+
+      <div>
+        <Label htmlFor="room">Room *</Label>
+        <Select
+          value={formData.roomId ? formData.roomId.toString() : ''}
+          onValueChange={(value) => {
+            const room = rooms.find(r => r.id === parseInt(value));
+            if (room) onRoomChange(room);
+          }}
+          disabled={!formData.hotelId || disabled || availability?.loading}
+        >
+          <SelectTrigger id="room" className={`w-full ${errors.roomId || selectedTaken ? 'border-red-500' : ''}`}>
+            <SelectValue placeholder={availableIds && availableIds.size === 0 ? 'No rooms free for this stay' : 'Select room'} />
+          </SelectTrigger>
+          <SelectContent position="popper" sideOffset={5}>
+            {listedRooms.map(room => (
+              <SelectItem key={room.id} value={room.id.toString()}>
+                {roomLabel(room, formData.bookingType)}
+                {availableIds && !availableIds.has(room.id) && ' — not free'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {roomHint && <p className="text-xs text-gray-500 mt-1">{roomHint}</p>}
+        {selectedTaken && selectedRoom && (
+          <p className="text-xs text-red-500 mt-1">Room {selectedRoom.roomNumber} is not free for this stay. Pick another room.</p>
+        )}
+        {selectedRoom && (
+          <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
+            <span>Capacity: {selectedRoom.capacity} guests</span>
+            {selectedRoom.allowsShortStay && (
+              <span className="text-purple-600">• Short stay: {selectedRoom.shortStayHours ?? 4}h for ${selectedRoom.shortStayPrice ?? 0}</span>
+            )}
           </div>
-        ) : (
-          <div className="border rounded-lg p-8 bg-gray-50 text-center">
-            <p className="text-gray-500">Please select a hotel first to search available rooms</p>
-          </div>
-        )
-      ) : (
-        <div>
-          <Label htmlFor="room">Room *</Label>
-          <Select
-            value={formData.roomId ? formData.roomId.toString() : ''}
-            onValueChange={(value) => {
-              const room = rooms.find(r => r.id === parseInt(value));
-              if (room) onRoomChange(room);
-            }}
-            disabled={!formData.hotelId || disabled}
-          >
-            <SelectTrigger className={`w-full ${errors.roomId ? 'border-red-500' : ''}`}>
-              <SelectValue placeholder="Select room" />
-            </SelectTrigger>
-            <SelectContent position="popper" sideOffset={5}>
-              {rooms.map(room => (
-                <SelectItem key={room.id} value={room.id.toString()}>
-                  Room {room.roomNumber} (${room.pricePerNight}/night, Cap: {room.capacity})
-                  {room.allowsShortStay && ' ⏰'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {selectedRoom && (
-            <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
-              <span>Capacity: {selectedRoom.capacity} guests</span>
-              {selectedRoom.allowsShortStay && <span className="text-purple-600">• Short-stay available</span>}
-            </div>
-          )}
-          <FieldError message={errors.roomId} />
-        </div>
-      )}
+        )}
+        <FieldError message={errors.roomId} />
+      </div>
     </div>
   );
 }

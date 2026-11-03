@@ -21,9 +21,12 @@ import ReservationSummary from './dialog/ReservationSummary';
 import RoomSelectionFields from './dialog/RoomSelectionFields';
 import GuestFields from './dialog/GuestFields';
 import StayFields from './dialog/StayFields';
+import StayPicker from './dialog/StayPicker';
+import { useAvailableRooms } from '@/hooks/useAvailableRooms';
 import { useReservationActions } from './dialog/useReservationActions';
 import { estimateTotal, getStayLength, validateReservationForm } from './dialog/validation';
 import { ReservationDialogMode, ReservationFormErrors } from './dialog/types';
+import { DEFAULT_SHORT_STAY_HOURS, StayChoice, emptyStay, isStayComplete, resolveStay, stayFromValues } from './dialog/stay';
 
 // Same rule as the API: a booking that hasn't started and has no money recorded (e.g. made by mistake)
 const canBeDeleted = (reservation: Reservation) =>
@@ -130,6 +133,20 @@ function initialFormData(mode: ReservationDialogMode, reservation: ReservationDi
   };
 }
 
+/** The stay picker's starting point when creating: a calendar prefill or the clicked date */
+function initialStay(reservation: ReservationDialogProps['reservation'], initialDate?: Date): StayChoice {
+  const prefill = reservation && !('id' in reservation) ? reservation : undefined;
+  if (prefill?.checkInDate) {
+    const bookingType = prefill.bookingType ?? BookingType.Daily;
+    return stayFromValues(
+      toStayInputValue(prefill.checkInDate, BookingType.ShortStay),
+      prefill.checkOutDate ? toStayInputValue(prefill.checkOutDate, BookingType.ShortStay) : '',
+      bookingType,
+    );
+  }
+  return emptyStay(initialDate ? format(initialDate, 'yyyy-MM-dd') : '');
+}
+
 function ReservationDialogBody({
   onOpenChange, mode, reservation, initialDate, onSuccess,
 }: ReservationDialogProps) {
@@ -141,7 +158,9 @@ function ReservationDialogBody({
   const createGuest = useCreateGuest();
 
   const [isEditing, setIsEditing] = useState(mode === 'create' || mode === 'edit');
-  const [formData, setFormData] = useState<CreateReservationDto>(() => initialFormData(mode, reservation, initialDate));
+  const creating = mode === 'create';
+  const [baseForm, setFormData] = useState<CreateReservationDto>(() => initialFormData(mode, reservation, initialDate));
+  const [stayChoice, setStayChoice] = useState<StayChoice>(() => initialStay(reservation, initialDate));
   const [isWalkIn, setIsWalkIn] = useState(false);
   const [walkInGuest, setWalkInGuest] = useState<CreateGuestDto>(EMPTY_WALK_IN);
   const [errors, setErrors] = useState<ReservationFormErrors>({});
@@ -149,11 +168,33 @@ function ReservationDialogBody({
   const { data: hotels = [] } = useHotels();
   const { data: guests = [] } = useGuests();
   const { data: myGuestProfile } = useMyGuestProfile(isGuest);
-  const { data: rooms = [] } = useRoomsByHotel(formData.hotelId || undefined);
+
+  // With only one hotel there's nothing to choose
+  if (creating && !baseForm.hotelId && hotels.length === 1) {
+    setFormData(prev => ({ ...prev, hotelId: hotels[0].id }));
+  }
+
+  const { data: rooms = [] } = useRoomsByHotel(baseForm.hotelId || undefined);
+  const selectedRoom = useMemo(() => rooms.find(r => r.id === baseForm.roomId) ?? null, [rooms, baseForm.roomId]);
+
+  // When creating, the stay picker decides the booking type and check-in/out. Guests always get
+  // the room's standard short-stay length; staff can make it longer or shorter.
+  const standardShortStayHours = selectedRoom?.shortStayHours ?? DEFAULT_SHORT_STAY_HOURS;
+  const stay = resolveStay(isGuest ? { ...stayChoice, hours: standardShortStayHours } : stayChoice);
+  const formData: CreateReservationDto = creating ? { ...baseForm, ...stay } : baseForm;
+
+  const stayComplete = creating && isStayComplete(stay);
+  const availableRooms = useAvailableRooms(
+    { hotelId: formData.hotelId, checkIn: stay.checkInDate, checkOut: stay.checkOutDate, bookingType: stay.bookingType },
+    { enabled: stayComplete },
+  );
+  const availability = creating ? {
+    loading: stayComplete && availableRooms.isFetching,
+    availableRoomIds: stayComplete && availableRooms.data ? new Set(availableRooms.data.rooms.map(r => r.id)) : null,
+  } : undefined;
 
   const existing = mode !== 'create' && reservation && 'id' in reservation ? reservation : undefined;
   const finished = !!existing && isFinished(existing.status);
-  const selectedRoom = useMemo(() => rooms.find(r => r.id === formData.roomId) ?? null, [rooms, formData.roomId]);
   const estimatedTotal = estimateTotal(formData, selectedRoom);
 
   const updateForm = (changes: Partial<CreateReservationDto>) => setFormData(prev => ({ ...prev, ...changes }));
@@ -171,6 +212,9 @@ function ReservationDialogBody({
       requireGuest: !isGuest,
       walkInGuest: walkIn ? walkInGuest : null,
     });
+    if (availability?.availableRoomIds && formData.roomId && !availability.availableRoomIds.has(formData.roomId)) {
+      validationErrors.roomId = 'This room is not free for the selected stay';
+    }
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
       showToast('Please fix the errors in the form', 'error');
@@ -267,15 +311,27 @@ function ReservationDialogBody({
                 rooms={rooms}
                 selectedRoom={selectedRoom}
                 errors={errors}
-                allowAvailabilitySearch={mode === 'create'}
-                disabled={finished}
+                disabled={finished || mode !== 'create'}
+                availability={availability}
                 onHotelChange={(hotelId) => updateForm({ hotelId, roomId: 0 })}
                 onRoomChange={(room) => {
                   updateForm({ hotelId: room.hotelId, roomId: room.id });
-                  showToast(`Room ${room.roomNumber} selected`, 'success');
+                  setErrors(prev => ({ ...prev, roomId: undefined }));
                 }}
-                onClearErrors={() => setErrors({})}
-              />
+              >
+                {creating && (
+                  <StayPicker
+                    value={stayChoice}
+                    onChange={(value) => {
+                      setStayChoice(value);
+                      setErrors(prev => ({ ...prev, checkInDate: undefined, checkOutDate: undefined }));
+                    }}
+                    canChangeShortStayHours={!isGuest}
+                    standardShortStayHours={standardShortStayHours}
+                    errors={errors}
+                  />
+                )}
+              </RoomSelectionFields>
 
               <GuestFields
                 bookingForSelf={isGuest}
@@ -309,6 +365,7 @@ function ReservationDialogBody({
                 bookingTypeLocked={mode !== 'create'}
                 showInternalNotes={!isGuest}
                 canSetPrice={mode === 'create' && !isGuest}
+                showStayInputs={!creating}
               />
             </div>
           )}

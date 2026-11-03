@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import ReservationDialog from '@/components/reservations/ReservationDialog';
+import { Button } from '@/components/ui/button';
 import TodaysActivity from '@/components/dashboard/TodaysActivity';
 import RoomStatusGrid from '@/components/dashboard/RoomStatusGrid';
 import OccupancyTrends from '@/components/dashboard/OccupancyTrends';
@@ -17,12 +20,14 @@ import {
   Calendar, 
   DollarSign, 
   TrendingUp,
-  Activity
+  Activity,
+  Plus
 } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const [creatingReservation, setCreatingReservation] = useState(false);
 
   // Fetch actual data lists
   const { data: hotelsList, isLoading: loadingHotels } = useQuery({
@@ -92,12 +97,24 @@ export default function AdminDashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Hotel Operations Dashboard</h1>
-          <p className="text-gray-600 mt-1">
-            Welcome back, {user?.fullName}! Here's what's happening today.
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Hotel Operations Dashboard</h1>
+            <p className="text-gray-600 mt-1">
+              Welcome back, {user?.fullName}! Here's what's happening today.
+            </p>
+          </div>
+          <Button size="lg" onClick={() => setCreatingReservation(true)} className="shrink-0">
+            <Plus className="h-5 w-5 mr-2" />
+            New Reservation
+          </Button>
         </div>
+
+        <ReservationDialog
+          open={creatingReservation}
+          onOpenChange={setCreatingReservation}
+          mode="create"
+        />
 
         {/* Today's Activity Section */}
         <TodaysActivity />
@@ -301,7 +318,7 @@ export default function AdminDashboard() {
                 <span className="text-sm font-medium">View Calendar</span>
               </button>
               <button
-                onClick={() => router.push('/dashboard/reservations/new')}
+                onClick={() => setCreatingReservation(true)}
                 className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-center"
               >
                 <Calendar className="h-6 w-6 mx-auto mb-2 text-blue-600" />

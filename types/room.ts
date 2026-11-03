@@ -16,11 +16,10 @@ export interface Room {
   capacity: number;
   pricePerNight: number;
   
-  // Short-Stay Support
+  // Short stay: a fixed length (e.g. 4 hours) at a flat price
   allowsShortStay: boolean;
-  shortStayHourlyRate?: number;
-  minimumShortStayHours?: number;
-  maximumShortStayHours?: number;
+  shortStayHours?: number;
+  shortStayPrice?: number;
   
   // Details
   description?: string;
@@ -60,9 +59,8 @@ export interface CreateRoomDto {
   capacity: number;
   pricePerNight: number;
   allowsShortStay?: boolean;
-  shortStayHourlyRate?: number;
-  minimumShortStayHours?: number;
-  maximumShortStayHours?: number;
+  shortStayHours?: number;
+  shortStayPrice?: number;
   description?: string;
   amenities?: string;
   images?: string;

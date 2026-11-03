@@ -25,8 +25,9 @@ export function getStayLength(formData: CreateReservationDto): number {
 export function estimateTotal(formData: CreateReservationDto, room: Room | null): number {
   const length = getStayLength(formData);
   if (!room || length <= 0) return 0;
+  // A short stay is one flat price, however many hours it was booked for
   return formData.bookingType === BookingType.ShortStay
-    ? length * (room.shortStayHourlyRate || 0)
+    ? room.shortStayPrice || 0
     : length * room.pricePerNight;
 }
 

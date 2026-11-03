@@ -160,32 +160,21 @@ export default function ViewRoomPage() {
               <p className="text-2xl font-bold text-gray-900">${room.pricePerNight}</p>
             </div>
 
-            {room.allowsShortStay && room.shortStayHourlyRate && (
+            {room.allowsShortStay && room.shortStayPrice != null && (
               <>
                 <div>
                   <Label className="text-gray-500">
-                    Hourly Rate
+                    Short Stay Price
                   </Label>
-                  <p className="text-2xl font-bold text-gray-900">${room.shortStayHourlyRate}/hour</p>
+                  <p className="text-2xl font-bold text-gray-900">${room.shortStayPrice}</p>
                 </div>
 
-                {room.minimumShortStayHours && (
-                  <div>
-                    <Label className="text-gray-500">
-                      Minimum Short-Stay
-                    </Label>
-                    <p className="text-gray-900">{room.minimumShortStayHours} hour{room.minimumShortStayHours !== 1 ? 's' : ''}</p>
-                  </div>
-                )}
-
-                {room.maximumShortStayHours && (
-                  <div>
-                    <Label className="text-gray-500">
-                      Maximum Short-Stay
-                    </Label>
-                    <p className="text-gray-900">{room.maximumShortStayHours} hour{room.maximumShortStayHours !== 1 ? 's' : ''}</p>
-                  </div>
-                )}
+                <div>
+                  <Label className="text-gray-500">
+                    Short Stay Length
+                  </Label>
+                  <p className="text-gray-900">{room.shortStayHours ?? 4} hours</p>
+                </div>
               </>
             )}
           </div>

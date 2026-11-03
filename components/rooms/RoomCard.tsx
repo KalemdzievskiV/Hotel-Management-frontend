@@ -25,14 +25,16 @@ export function RoomCard({
   room, 
   bookingType, 
   nights = 1,
-  hours = 1,
+  hours,
   onSelect, 
   selected = false,
   compact = false
 }: RoomCardProps) {
-  const totalPrice = bookingType === BookingType.ShortStay 
-    ? (room.shortStayHourlyRate || 0) * hours
+  // A short stay is one flat price, whatever its length
+  const totalPrice = bookingType === BookingType.ShortStay
+    ? room.shortStayPrice || 0
     : room.pricePerNight * nights;
+  const shortStayLabel = `Short stay · ${hours || room.shortStayHours || 4}h`;
 
   const getRoomTypeBadgeColor = (type: RoomType) => {
     const colors: Record<RoomType, string> = {
@@ -90,7 +92,7 @@ export function RoomCard({
             <div className="text-right">
               <div className="text-xs text-gray-500 mb-1">
                 {bookingType === BookingType.ShortStay
-                  ? `$${room.shortStayHourlyRate}/hr × ${hours}`
+                  ? shortStayLabel
                   : `$${room.pricePerNight}/nt × ${nights}`}
               </div>
               <div className="font-bold text-green-600">
@@ -200,7 +202,7 @@ export function RoomCard({
                   <>
                     <Clock className="h-4 w-4 mr-1" />
                     <span className="text-sm">
-                      ${room.shortStayHourlyRate}/hour × {hours}h
+                      {shortStayLabel}
                     </span>
                   </>
                 ) : (
@@ -241,11 +243,7 @@ export function RoomCard({
             <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
               <div className="flex items-center">
                 <Clock className="h-3 w-3 mr-1" />
-                <span>
-                  {room.minimumShortStayHours && `Min: ${room.minimumShortStayHours}h`}
-                  {room.minimumShortStayHours && room.maximumShortStayHours && ' • '}
-                  {room.maximumShortStayHours && `Max: ${room.maximumShortStayHours}h`}
-                </span>
+                <span>Standard short stay: {room.shortStayHours ?? 4} hours</span>
               </div>
             </div>
           )}
