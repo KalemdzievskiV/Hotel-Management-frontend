@@ -1,5 +1,4 @@
 'use client';
-'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -7,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import WebPushToggle from '@/components/notifications/WebPushToggle';
 
 export default function SettingsPage() {
     return (
@@ -66,15 +66,7 @@ export default function SettingsPage() {
                                 </div>
                                 <Switch defaultChecked />
                             </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>Push Notifications</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Receive real-time updates on your device.
-                                    </p>
-                                </div>
-                                <Switch defaultChecked />
-                            </div>
+                            <WebPushToggle />
                         </CardContent>
                     </Card>
 

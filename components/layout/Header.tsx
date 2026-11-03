@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { forgetWebPushForUser } from '@/lib/push';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -13,7 +14,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuthStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // While still signed in, so the API knows whose pushes to stop on this device
+    await forgetWebPushForUser().catch(() => undefined);
     logout();
     router.push('/login');
   };

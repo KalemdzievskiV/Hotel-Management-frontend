@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import SubscriptionBanner from '@/components/billing/SubscriptionBanner';
+import { syncWebPush } from '@/lib/push';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const { isAuthenticated, _hasHydrated } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Keep this browser's push notifications linked to whoever is signed in
+  useEffect(() => {
+    if (isAuthenticated) syncWebPush().catch(() => undefined);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     // Only redirect if the store has hydrated and user is not authenticated
