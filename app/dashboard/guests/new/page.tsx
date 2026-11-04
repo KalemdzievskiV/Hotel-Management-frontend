@@ -134,7 +134,7 @@ export default function NewGuestPage() {
     <DashboardLayout>
       <div className="max-w-4xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Add New Guest</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Add New Guest</h1>
           <p className="mt-1 text-gray-600">Create a new walk-in guest profile</p>
         </div>
 
@@ -203,7 +203,7 @@ export default function NewGuestPage() {
                     value={formData.hotelId?.toString() || ''}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, hotelId: value ? parseInt(value) : undefined }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select hotel" />
                     </SelectTrigger>
                     <SelectContent>
@@ -235,7 +235,7 @@ export default function NewGuestPage() {
                     value={formData.gender}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -275,7 +275,7 @@ export default function NewGuestPage() {
                     value={formData.identificationType}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, identificationType: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>

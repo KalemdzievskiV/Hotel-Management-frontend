@@ -152,14 +152,14 @@ export default function HousekeepingPage() {
 
     return (
         <DashboardLayout>
-            <div className="p-6 space-y-6">
+            <div className="md:p-2 space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Housekeeping</h1>
                         <p className="text-gray-500 mt-1">Manage cleaning tasks and room status</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                         {hotels && hotels.length > 1 && (
                             <Select value={String(hotelId)} onValueChange={v => setSelectedHotelId(Number(v))}>
                                 <SelectTrigger className="w-48"><SelectValue placeholder="Select hotel" /></SelectTrigger>
@@ -182,53 +182,53 @@ export default function HousekeepingPage() {
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card>
-                        <CardContent className="pt-6">
+                        <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500">Total Tasks</p>
                                     <p className="text-2xl font-bold">{schedule?.totalTasks ?? 0}</p>
                                 </div>
-                                <ClipboardList className="h-8 w-8 text-blue-500" />
+                                <ClipboardList className="hidden sm:block shrink-0 h-8 w-8 text-blue-500" />
                             </div>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardContent className="pt-6">
+                        <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500">Pending</p>
                                     <p className="text-2xl font-bold text-yellow-600">{schedule?.pendingTasks ?? 0}</p>
                                 </div>
-                                <Clock className="h-8 w-8 text-yellow-500" />
+                                <Clock className="hidden sm:block shrink-0 h-8 w-8 text-yellow-500" />
                             </div>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardContent className="pt-6">
+                        <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500">In Progress</p>
                                     <p className="text-2xl font-bold text-blue-600">{schedule?.inProgressTasks ?? 0}</p>
                                 </div>
-                                <Play className="h-8 w-8 text-blue-500" />
+                                <Play className="hidden sm:block shrink-0 h-8 w-8 text-blue-500" />
                             </div>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardContent className="pt-6">
+                        <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500">Completed</p>
                                     <p className="text-2xl font-bold text-green-600">{schedule?.completedTasks ?? 0}</p>
                                 </div>
-                                <CheckCircle className="h-8 w-8 text-green-500" />
+                                <CheckCircle className="hidden sm:block shrink-0 h-8 w-8 text-green-500" />
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 <Tabs defaultValue="schedule">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <TabsList>
                             <TabsTrigger value="schedule">Daily Schedule</TabsTrigger>
                             <TabsTrigger value="all">All Tasks</TabsTrigger>
@@ -417,14 +417,14 @@ export default function HousekeepingPage() {
                             <div>
                                 <Label>Task Type</Label>
                                 <Select value={String(newTask.type)} onValueChange={v => setNewTask(p => ({ ...p, type: Number(v) }))}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                                     <SelectContent>{TASK_TYPES.map(t => <SelectItem key={t.value} value={String(t.value)}>{t.label}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                             <div>
                                 <Label>Priority</Label>
                                 <Select value={String(newTask.priority)} onValueChange={v => setNewTask(p => ({ ...p, priority: Number(v) }))}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                                     <SelectContent>{PRIORITIES.map(p => <SelectItem key={p.value} value={String(p.value)}>{p.label}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
@@ -433,7 +433,7 @@ export default function HousekeepingPage() {
                             <div>
                                 <Label>Room</Label>
                                 <Select value={newTask.roomId ? String(newTask.roomId) : undefined} onValueChange={v => setNewTask(p => ({ ...p, roomId: Number(v) }))}>
-                                    <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
+                                    <SelectTrigger className="w-full"><SelectValue placeholder="Select room" /></SelectTrigger>
                                     <SelectContent>
                                         {[...(rooms ?? [])]
                                             .sort((a, b) => a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true }))
@@ -444,7 +444,7 @@ export default function HousekeepingPage() {
                             <div>
                                 <Label>Assign to (optional)</Label>
                                 <Select value={newTask.assignedToUserId ?? undefined} onValueChange={v => setNewTask(p => ({ ...p, assignedToUserId: v }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue placeholder={staffUsers.length ? 'Unassigned' : 'No housekeepers yet'} />
                                     </SelectTrigger>
                                     <SelectContent>

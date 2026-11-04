@@ -59,7 +59,7 @@ export default function ViewRoomPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Room {room.roomNumber}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Room {room.roomNumber}</h1>
             <p className="mt-1 text-gray-600">{room.hotelName}</p>
           </div>
           <div className="flex gap-3">

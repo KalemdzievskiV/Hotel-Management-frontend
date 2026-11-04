@@ -54,11 +54,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    // h-dvh: follows the phone browser's toolbars, so the bottom of the page isn't hidden behind them
+    <div className="flex h-dvh bg-gray-100 overflow-hidden">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -71,7 +72,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <Sidebar />
+        <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main Content Area */}
@@ -81,7 +82,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Page Content */}
         {/* relative: keeps absolutely-positioned hidden inputs (e.g. Radix Select's native select) inside the scroll area */}
-        <main className="relative flex-1 overflow-y-auto p-4 md:p-6 pb-8">
+        <main className="relative flex-1 overflow-y-auto overscroll-contain p-4 md:p-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
           <SubscriptionBanner />
           {children}
         </main>

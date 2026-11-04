@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { MobileList, MobileListItem } from '@/components/ui/mobile-list';
 import { Pagination } from '@/components/ui/pagination';
 import { usePagination } from '@/hooks/usePagination';
 import {
@@ -75,9 +76,9 @@ export default function HotelsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Hotels</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Hotels</h1>
             <p className="mt-1 text-gray-600">
               Manage your hotel properties
             </p>
@@ -90,7 +91,7 @@ export default function HotelsPage() {
 
         {/* Search */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
             <Input
               type="text"
               placeholder="Search hotels by name, city, or country..."
@@ -109,7 +110,37 @@ export default function HotelsPage() {
             </div>
           ) : filteredHotels && filteredHotels.length > 0 ? (
             <>
-            <div className="overflow-x-auto">
+            <MobileList>
+              {pagedHotels.map((hotel) => (
+                <MobileListItem
+                  key={hotel.id}
+                  onClick={() => router.push(`/dashboard/hotels/${hotel.id}`)}
+                  title={hotel.name}
+                  aside={
+                    <Badge
+                      variant={hotel.isActive ? "default" : "secondary"}
+                      className={hotel.isActive ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-gray-100 text-gray-800 hover:bg-gray-100"}
+                    >
+                      {hotel.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  }
+                  actions={
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/hotels/${hotel.id}/edit`)}>
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-red-600" onClick={() => setDeleteConfirm(hotel.id)}>
+                        Delete
+                      </Button>
+                    </>
+                  }
+                >
+                  <p>{[hotel.city, hotel.country].filter(Boolean).join(', ')} · {hotel.stars}★</p>
+                  {isSuperAdmin && <p>Owner: {hotel.ownerName || 'N/A'}</p>}
+                </MobileListItem>
+              ))}
+            </MobileList>
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>

@@ -99,7 +99,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Hotel Operations Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Hotel Operations Dashboard</h1>
             <p className="text-gray-600 mt-1">
               Welcome back, {user?.fullName}! Here's what's happening today.
             </p>

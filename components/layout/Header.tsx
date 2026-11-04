@@ -1,9 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { forgetWebPushForUser } from '@/lib/push';
+
+/** Section names for the phone header, matched by the start of the path */
+const SECTION_TITLES: [string, string][] = [
+  ['/dashboard/super-admin/subscriptions', 'Subscriptions'],
+  ['/dashboard/availability', 'Availability'],
+  ['/dashboard/calendar', 'Calendar'],
+  ['/dashboard/hotels', 'Hotels'],
+  ['/dashboard/rooms', 'Rooms'],
+  ['/dashboard/reservations', 'Reservations'],
+  ['/dashboard/guests', 'Guests'],
+  ['/dashboard/walk-in', 'Walk-In'],
+  ['/dashboard/inventory', 'Inventory'],
+  ['/dashboard/housekeeping', 'Housekeeping'],
+  ['/dashboard/reports', 'Reports'],
+  ['/dashboard/staff', 'Staff'],
+  ['/dashboard/users', 'Users'],
+  ['/dashboard/billing', 'Billing'],
+  ['/dashboard/profile', 'My Profile'],
+  ['/dashboard/settings', 'Settings'],
+];
+
+function sectionTitle(pathname: string) {
+  return SECTION_TITLES.find(([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`))?.[1] ?? 'Dashboard';
+}
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -11,6 +35,7 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -23,53 +48,25 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="flex items-center justify-between h-16 px-4 md:px-6">
+      <div className="flex items-center justify-between gap-2 h-14 md:h-16 px-2 md:px-6">
         {/* Mobile menu button */}
         <button
           onClick={onMenuClick}
+          aria-label="Open menu"
           className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
-        {/* Page Title / Breadcrumb area */}
-        <div className="flex items-center flex-1 lg:flex-none">
-          <h1 className="text-xl font-semibold text-gray-800">
-            {/* This can be dynamically set per page later */}
-          </h1>
-        </div>
+        {/* Where you are; on desktop the sidebar already shows it */}
+        <p className="lg:hidden flex-1 min-w-0 truncate text-base font-semibold text-gray-900">
+          {sectionTitle(pathname)}
+        </p>
 
         {/* Right side - User menu */}
-        <div className="flex items-center gap-2 md:gap-4">
-          {/* Notifications placeholder - hidden on small screens */}
-          <button className="hidden sm:block p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
-          </button>
-
+        <div className="flex items-center gap-2 md:gap-4 ml-auto">
           {/* User Dropdown */}
           <div className="relative">
             <button

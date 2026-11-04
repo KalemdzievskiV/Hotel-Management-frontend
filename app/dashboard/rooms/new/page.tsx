@@ -124,7 +124,7 @@ export default function NewRoomPage() {
       <div className="max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Add New Room</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Add New Room</h1>
           <p className="mt-1 text-gray-600">Create a new room for your hotel</p>
         </div>
 
@@ -178,7 +178,7 @@ export default function NewRoomPage() {
                   value={formData.type?.toString() || '0'}
                   onValueChange={(value) => handleChange({ target: { name: 'type', value, type: 'select' } } as any)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -359,7 +359,7 @@ export default function NewRoomPage() {
                   value={formData.status?.toString() || '0'}
                   onValueChange={(value) => handleChange({ target: { name: 'status', value, type: 'select' } } as any)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

@@ -180,14 +180,14 @@ export default function WalkInPage() {
 
     return (
         <DashboardLayout>
-            <div className="p-6 max-w-6xl mx-auto space-y-6">
+            <div className="md:p-2 max-w-6xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Walk-In Check-In</h1>
                         <p className="text-gray-500 mt-1">Fast guest registration and room assignment</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                         {hotels && hotels.length > 1 && (
                             <Select value={String(hotelId)} onValueChange={v => setSelectedHotelId(Number(v))}>
                                 <SelectTrigger className="w-48"><SelectValue placeholder="Select hotel" /></SelectTrigger>
@@ -220,8 +220,8 @@ export default function WalkInPage() {
                             >
                                 {i + 1}
                             </button>
-                            <span className={`text-sm font-medium capitalize ${step === s ? 'text-blue-600' : 'text-gray-500'}`}>{s}</span>
-                            {i < 3 && <ChevronRight className="h-4 w-4 text-gray-300" />}
+                            <span className={`text-sm font-medium capitalize ${step === s ? 'text-blue-600' : 'hidden sm:inline text-gray-500'}`}>{s}</span>
+                            {i < 3 && <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />}
                         </div>
                     ))}
                 </div>
@@ -403,7 +403,7 @@ export default function WalkInPage() {
                                         <div>
                                             <Label htmlFor="walkin-discount-reason">Discount Reason</Label>
                                             <Select value={discountReason} onValueChange={setDiscountReason}>
-                                                <SelectTrigger id="walkin-discount-reason"><SelectValue placeholder="Select reason" /></SelectTrigger>
+                                                <SelectTrigger id="walkin-discount-reason" className="w-full"><SelectValue placeholder="Select reason" /></SelectTrigger>
                                                 <SelectContent>{DISCOUNT_REASONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                                             </Select>
                                         </div>
@@ -416,7 +416,7 @@ export default function WalkInPage() {
                                         <div>
                                             <Label htmlFor="walkin-payment-method">Payment Method</Label>
                                             <Select value={String(paymentMethod)} onValueChange={v => setPaymentMethod(Number(v))}>
-                                                <SelectTrigger id="walkin-payment-method"><SelectValue /></SelectTrigger>
+                                                <SelectTrigger id="walkin-payment-method" className="w-full"><SelectValue /></SelectTrigger>
                                                 <SelectContent>{PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>)}</SelectContent>
                                             </Select>
                                         </div>
@@ -588,7 +588,7 @@ export default function WalkInPage() {
                             <div>
                                 <Label htmlFor="walkin-select-reservation">Select Reservation</Label>
                                 <Select value={String(checkoutReservationId ?? '')} onValueChange={v => { setCheckoutReservationId(Number(v)); const r = checkedInReservations?.find((x: any) => x.id === Number(v)); setFinalPayment(r?.remainingAmount ?? 0); }}>
-                                    <SelectTrigger id="walkin-select-reservation"><SelectValue placeholder="Choose reservation" /></SelectTrigger>
+                                    <SelectTrigger id="walkin-select-reservation" className="w-full"><SelectValue placeholder="Choose reservation" /></SelectTrigger>
                                     <SelectContent>{checkedInReservations?.map((r: any) => <SelectItem key={r.id} value={String(r.id)}>Room {r.roomNumber} — {r.guestName}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
@@ -610,7 +610,7 @@ export default function WalkInPage() {
                         <div>
                             <Label htmlFor="walkin-payment-method-2">Payment Method</Label>
                             <Select value={String(paymentMethod)} onValueChange={v => setPaymentMethod(Number(v))}>
-                                <SelectTrigger id="walkin-payment-method-2"><SelectValue /></SelectTrigger>
+                                <SelectTrigger id="walkin-payment-method-2" className="w-full"><SelectValue /></SelectTrigger>
                                 <SelectContent>{PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>

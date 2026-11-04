@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { AlertTriangle, Package, TrendingDown, DollarSign, Plus, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { MobileList, MobileListItem } from '@/components/ui/mobile-list';
 import { Pagination } from '@/components/ui/pagination';
 import { usePagination } from '@/hooks/usePagination';
 
@@ -125,14 +126,14 @@ export default function InventoryPage() {
 
     return (
         <DashboardLayout>
-            <div className="p-6 space-y-6">
+            <div className="md:p-2 space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
                         <p className="text-gray-500 mt-1">Track linens, towels, amenities and supplies</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                         {hotels && hotels.length > 1 && (
                             <Select value={String(hotelId)} onValueChange={v => setSelectedHotelId(Number(v))}>
                                 <SelectTrigger className="w-48"><SelectValue placeholder="Select hotel" /></SelectTrigger>
@@ -148,48 +149,48 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                     <Card>
-                        <CardContent className="pt-6">
+                        <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500">Total Items</p>
                                     <p className="text-2xl font-bold">{items?.length ?? 0}</p>
                                 </div>
-                                <Package className="h-8 w-8 text-blue-500" />
+                                <Package className="hidden sm:block shrink-0 h-8 w-8 text-blue-500" />
                             </div>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardContent className="pt-6">
+                        <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500">Low Stock Alerts</p>
                                     <p className="text-2xl font-bold text-red-600">{lowStockCount}</p>
                                 </div>
-                                <AlertTriangle className="h-8 w-8 text-red-500" />
+                                <AlertTriangle className="hidden sm:block shrink-0 h-8 w-8 text-red-500" />
                             </div>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardContent className="pt-6">
+                        <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500">Total Stock Value</p>
                                     <p className="text-2xl font-bold">${totalValue.toFixed(2)}</p>
                                 </div>
-                                <DollarSign className="h-8 w-8 text-green-500" />
+                                <DollarSign className="hidden sm:block shrink-0 h-8 w-8 text-green-500" />
                             </div>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardContent className="pt-6">
+                        <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500">Categories</p>
                                     <p className="text-2xl font-bold">{costAnalysis?.length ?? 0}</p>
                                 </div>
-                                <TrendingDown className="h-8 w-8 text-purple-500" />
+                                <TrendingDown className="hidden sm:block shrink-0 h-8 w-8 text-purple-500" />
                             </div>
                         </CardContent>
                     </Card>
@@ -227,7 +228,35 @@ export default function InventoryPage() {
                                     <div className="p-8 text-center text-gray-500">Loading inventory...</div>
                                 ) : (
                                     <>
-                                    <div className="overflow-x-auto">
+                                    <MobileList>
+                                        {pagedItems.map(item => (
+                                            <MobileListItem
+                                                key={item.id}
+                                                title={item.name}
+                                                aside={item.isLowStock ? <Badge variant="destructive">Low Stock</Badge> : <Badge className="bg-green-100 text-green-800">OK</Badge>}
+                                                actions={
+                                                    <>
+                                                        <Button size="sm" variant="outline" onClick={() => { setSelectedItemId(item.id); setTxnForm({ inventoryItemId: item.id, type: 2, quantity: 1 }); setShowTransaction(true); }}>
+                                                            <ArrowUpCircle className="h-3 w-3 mr-1" /> Restock
+                                                        </Button>
+                                                        <Button size="sm" variant="outline" onClick={() => { setSelectedItemId(item.id); setTxnForm({ inventoryItemId: item.id, type: 1, quantity: 1 }); setShowTransaction(true); }}>
+                                                            <ArrowDownCircle className="h-3 w-3 mr-1" /> Use
+                                                        </Button>
+                                                    </>
+                                                }
+                                            >
+                                                <p>
+                                                    <span className={item.isLowStock ? 'font-bold text-red-600' : 'text-gray-900'}>{item.quantity} {item.unit}</span>
+                                                    {' '}· min {item.minimumThreshold} · ${item.unitCost.toFixed(2)} each
+                                                </p>
+                                                <p>{item.categoryName}{item.supplier ? ` · ${item.supplier}` : ''}</p>
+                                            </MobileListItem>
+                                        ))}
+                                        {(!items || items.length === 0) && (
+                                            <li className="p-8 text-center text-gray-500">No inventory items. Add your first item.</li>
+                                        )}
+                                    </MobileList>
+                                    <div className="hidden md:block overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <thead>
                                                 <tr className="border-b bg-gray-50">
@@ -290,7 +319,26 @@ export default function InventoryPage() {
                     <TabsContent value="transactions">
                         <Card>
                             <CardContent className="p-0">
-                                <div className="overflow-x-auto">
+                                <MobileList>
+                                    {pagedTransactions.map(t => (
+                                        <MobileListItem
+                                            key={t.id}
+                                            title={<>{t.itemName} <span className="font-mono font-normal text-gray-500">×{t.quantity}</span></>}
+                                            aside={
+                                                <Badge variant={t.type === 2 || t.type === 5 ? 'default' : 'destructive'}>
+                                                    {t.typeName}
+                                                </Badge>
+                                            }
+                                        >
+                                            <p>{format(new Date(t.date), 'MMM d, HH:mm')} · {t.createdByName}{t.roomNumber ? ` · Room ${t.roomNumber}` : ''}</p>
+                                            {t.notes && <p>{t.notes}</p>}
+                                        </MobileListItem>
+                                    ))}
+                                    {(!transactions || transactions.length === 0) && (
+                                        <li className="p-8 text-center text-gray-500">No transactions recorded yet.</li>
+                                    )}
+                                </MobileList>
+                                <div className="hidden md:block overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className="border-b bg-gray-50">
@@ -384,7 +432,7 @@ export default function InventoryPage() {
                             <div>
                                 <Label htmlFor="inventory-category">Category</Label>
                                 <Select value={String(newItem.category)} onValueChange={v => setNewItem(p => ({ ...p, category: Number(v) }))}>
-                                    <SelectTrigger id="inventory-category"><SelectValue /></SelectTrigger>
+                                    <SelectTrigger id="inventory-category" className="w-full"><SelectValue /></SelectTrigger>
                                     <SelectContent>{CATEGORIES.map(c => <SelectItem key={c.value} value={String(c.value)}>{c.label}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
@@ -429,14 +477,14 @@ export default function InventoryPage() {
                         <div>
                             <Label htmlFor="inventory-item">Item</Label>
                             <Select value={String(txnForm.inventoryItemId ?? '')} onValueChange={v => setTxnForm(p => ({ ...p, inventoryItemId: Number(v) }))}>
-                                <SelectTrigger id="inventory-item"><SelectValue placeholder="Select item" /></SelectTrigger>
+                                <SelectTrigger id="inventory-item" className="w-full"><SelectValue placeholder="Select item" /></SelectTrigger>
                                 <SelectContent>{items?.map(i => <SelectItem key={i.id} value={String(i.id)}>{i.name}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                         <div>
                             <Label htmlFor="inventory-transaction-type">Transaction Type</Label>
                             <Select value={String(txnForm.type)} onValueChange={v => setTxnForm(p => ({ ...p, type: Number(v) }))}>
-                                <SelectTrigger id="inventory-transaction-type"><SelectValue /></SelectTrigger>
+                                <SelectTrigger id="inventory-transaction-type" className="w-full"><SelectValue /></SelectTrigger>
                                 <SelectContent>{TRANSACTION_TYPES.map(t => <SelectItem key={t.value} value={String(t.value)}>{t.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>

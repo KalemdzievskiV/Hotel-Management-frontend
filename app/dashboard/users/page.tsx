@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { MobileList, MobileListItem } from '@/components/ui/mobile-list';
 import { Pagination } from '@/components/ui/pagination';
 import { usePagination } from '@/hooks/usePagination';
 import {
@@ -172,9 +173,9 @@ export default function UsersPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Users</h1>
             <p className="text-gray-600 mt-1">Manage system users and permissions</p>
           </div>
           <Button onClick={() => setCreateDialog(true)}>
@@ -205,7 +206,39 @@ export default function UsersPage() {
             </div>
           ) : filteredUsers && filteredUsers.length > 0 ? (
             <>
-            <div className="overflow-x-auto">
+            <MobileList>
+              {pagedUsers.map((user) => (
+                <MobileListItem
+                  key={user.id}
+                  title={user.fullName}
+                  aside={
+                    <Badge className={user.isActive ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'}>
+                      {user.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  }
+                  actions={
+                    <>
+                      {user.isActive ? (
+                        <Button variant="outline" size="sm" className="text-orange-600" onClick={() => deactivateUser.mutate(user.id)}>
+                          <Ban className="h-4 w-4" /> Deactivate
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm" className="text-green-600" onClick={() => activateUser.mutate(user.id)}>
+                          <CheckCircle className="h-4 w-4" /> Activate
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" className="text-red-600" onClick={() => setDeleteConfirm(user.id)}>
+                        <Trash2 className="h-4 w-4" /> Delete
+                      </Button>
+                    </>
+                  }
+                >
+                  <p className="break-all">{user.email}{user.phoneNumber ? ` · ${user.phoneNumber}` : ''}</p>
+                  <p>{user.roles.join(', ')}{user.hotelName ? ` · ${user.hotelName}` : ''}</p>
+                </MobileListItem>
+              ))}
+            </MobileList>
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -341,7 +374,7 @@ export default function UsersPage() {
               <div>
                 <Label>Role *</Label>
                 <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -359,7 +392,7 @@ export default function UsersPage() {
                   value={newUser.hotelId?.toString() || 'none'} 
                   onValueChange={(value) => setNewUser({ ...newUser, hotelId: value === 'none' ? undefined : parseInt(value) })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="No hotel" />
                   </SelectTrigger>
                   <SelectContent>

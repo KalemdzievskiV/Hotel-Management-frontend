@@ -50,7 +50,7 @@ export default function ViewHotelPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{hotel.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{hotel.name}</h1>
             <p className="mt-1 text-gray-600">Hotel Details</p>
           </div>
           <div className="flex gap-3">
@@ -143,7 +143,13 @@ export default function ViewHotelPage() {
                 <Label className="text-gray-500">
                   Amenities
                 </Label>
-                <p className="text-gray-900">{hotel.amenities}</p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {hotel.amenities.split(',').map((a) => a.trim()).filter(Boolean).map((amenity) => (
+                    <span key={amenity} className="rounded-full bg-gray-100 px-2.5 py-0.5 text-sm text-gray-700">
+                      {amenity}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -277,7 +283,7 @@ export default function ViewHotelPage() {
             <CardTitle>Statistics</CardTitle>
           </CardHeader>
           <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             <div className="bg-blue-50 rounded-lg p-4">
               <p className="text-sm font-medium text-blue-600">Total Rooms</p>
               <p className="mt-1 text-2xl font-bold text-blue-900">

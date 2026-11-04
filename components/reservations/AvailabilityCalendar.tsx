@@ -156,7 +156,7 @@ export function AvailabilityCalendar({
                   value={bookingType.toString()}
                   onValueChange={(value) => setBookingType(parseInt(value) as BookingType)}
                 >
-                  <SelectTrigger id="bookingType">
+                  <SelectTrigger id="bookingType" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -229,7 +229,7 @@ export function AvailabilityCalendar({
                     value={roomType || 'any'}
                     onValueChange={(value) => setRoomType(value === 'any' ? undefined : value)}
                   >
-                    <SelectTrigger id="roomType">
+                    <SelectTrigger id="roomType" className="w-full">
                       <SelectValue placeholder="Any Type" />
                     </SelectTrigger>
                     <SelectContent>

@@ -23,6 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { MobileList, MobileListItem } from '@/components/ui/mobile-list';
 import { Pagination } from '@/components/ui/pagination';
 import {
   Dialog,
@@ -40,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Reservation, ReservationStatus, PaymentStatus } from '@/types';
+import { enumLabel } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/date';
 
 export default function ReservationsPage() {
@@ -175,13 +177,66 @@ export default function ReservationsPage() {
     );
   }
 
+  /** Confirm / check-in / check-out / cancel, shared by the table and the phone list */
+  const rowActions = (reservation: NonNullable<typeof filteredReservations>[number]) => (
+    <>
+      {/* Moving a booking through its lifecycle is staff work; guests can only view and cancel */}
+      {permissions.canViewAllReservations && reservation.status === ReservationStatus.Pending && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleConfirm(reservation.id)}
+          disabled={confirmReservation.isPending}
+          className="text-green-600 hover:text-green-900 hover:bg-green-50"
+        >
+          Confirm
+        </Button>
+      )}
+
+      {permissions.canViewAllReservations && reservation.status === ReservationStatus.Confirmed && reservation.canCheckIn && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleCheckIn(reservation.id)}
+          disabled={checkIn.isPending}
+          className="text-green-600 hover:text-green-900 hover:bg-green-50"
+        >
+          Check-in
+        </Button>
+      )}
+
+      {permissions.canViewAllReservations && reservation.status === ReservationStatus.CheckedIn && reservation.canCheckOut && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleCheckOut(reservation.id)}
+          disabled={checkOut.isPending}
+          className="text-purple-600 hover:text-purple-900 hover:bg-purple-50"
+        >
+          Check-out
+        </Button>
+      )}
+
+      {reservation.canCancel && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCancelDialog({ id: reservation.id, guestName: reservation.guestName || 'Guest' })}
+          className="text-red-600 hover:text-red-900 hover:bg-red-50"
+        >
+          Cancel
+        </Button>
+      )}
+    </>
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Reservations</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reservations</h1>
             <p className="mt-1 text-gray-600">
               Manage bookings and reservations
             </p>
@@ -194,7 +249,7 @@ export default function ReservationsPage() {
 
         {/* Filters */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
             <div className={`grid grid-cols-1 gap-4 ${permissions.canViewAllReservations ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
               <div>
                 <Label htmlFor="search-reservations">Search</Label>
@@ -210,7 +265,7 @@ export default function ReservationsPage() {
                 <div>
                   <Label htmlFor="filter-hotel">Filter by hotel</Label>
                   <Select value={selectedHotelId} onValueChange={setSelectedHotelId}>
-                    <SelectTrigger id="filter-hotel">
+                    <SelectTrigger id="filter-hotel" className="w-full">
                       <SelectValue placeholder="All Hotels" />
                     </SelectTrigger>
                     <SelectContent>
@@ -227,7 +282,7 @@ export default function ReservationsPage() {
               <div>
                 <Label htmlFor="filter-status">Status</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger id="filter-status">
+                  <SelectTrigger id="filter-status" className="w-full">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -253,7 +308,31 @@ export default function ReservationsPage() {
             </div>
           ) : filteredReservations && filteredReservations.length > 0 ? (
             <>
-            <div className="overflow-x-auto">
+            <MobileList>
+              {filteredReservations.map((reservation) => (
+                <MobileListItem
+                  key={reservation.id}
+                  onClick={() => router.push(`/dashboard/reservations/${reservation.id}`)}
+                  title={<>{reservation.guestName} <span className="font-normal text-gray-400">#{reservation.id}</span></>}
+                  aside={
+                    <Badge className={getStatusBadge(reservation.status)}>
+                      {enumLabel(ReservationStatus[reservation.status])}
+                    </Badge>
+                  }
+                  actions={rowActions(reservation)}
+                >
+                  <p>{reservation.hotelName} · Room {reservation.roomNumber}</p>
+                  <p>{formatDate(reservation.checkInDate)} – {formatDate(reservation.checkOutDate)}</p>
+                  <p className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-gray-900">${reservation.totalAmount}</span>
+                    <Badge className={getPaymentBadge(reservation.paymentStatus)}>
+                      {enumLabel(PaymentStatus[reservation.paymentStatus])}
+                    </Badge>
+                  </p>
+                </MobileListItem>
+              ))}
+            </MobileList>
+            <div className="hidden md:block overflow-x-auto">
               <Table>
               <TableHeader>
                 <TableRow>
@@ -301,12 +380,12 @@ export default function ReservationsPage() {
                     <TableCell>
                         <div className="text-sm font-medium text-gray-900">${reservation.totalAmount}</div>
                         <Badge className={getPaymentBadge(reservation.paymentStatus)}>
-                          {PaymentStatus[reservation.paymentStatus]}
+                          {enumLabel(PaymentStatus[reservation.paymentStatus])}
                         </Badge>
                     </TableCell>
                     <TableCell>
                         <Badge className={getStatusBadge(reservation.status)}>
-                          {ReservationStatus[reservation.status]}
+                          {enumLabel(ReservationStatus[reservation.status])}
                         </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -320,53 +399,7 @@ export default function ReservationsPage() {
                             View
                           </Button>
                           
-                          {/* Moving a booking through its lifecycle is staff work; guests can only view and cancel */}
-                          {permissions.canViewAllReservations && reservation.status === ReservationStatus.Pending && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleConfirm(reservation.id)}
-                              disabled={confirmReservation.isPending}
-                              className="text-green-600 hover:text-green-900 hover:bg-green-50"
-                            >
-                              Confirm
-                            </Button>
-                          )}
-                          
-                          {permissions.canViewAllReservations && reservation.status === ReservationStatus.Confirmed && reservation.canCheckIn && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleCheckIn(reservation.id)}
-                              disabled={checkIn.isPending}
-                              className="text-green-600 hover:text-green-900 hover:bg-green-50"
-                            >
-                              Check-in
-                            </Button>
-                          )}
-                          
-                          {permissions.canViewAllReservations && reservation.status === ReservationStatus.CheckedIn && reservation.canCheckOut && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleCheckOut(reservation.id)}
-                              disabled={checkOut.isPending}
-                              className="text-purple-600 hover:text-purple-900 hover:bg-purple-50"
-                            >
-                              Check-out
-                            </Button>
-                          )}
-                          
-                          {reservation.canCancel && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setCancelDialog({ id: reservation.id, guestName: reservation.guestName || 'Guest' })}
-                              className="text-red-600 hover:text-red-900 hover:bg-red-50"
-                            >
-                              Cancel
-                            </Button>
-                          )}
+                          {rowActions(reservation)}
                       </div>
                     </TableCell>
                   </TableRow>

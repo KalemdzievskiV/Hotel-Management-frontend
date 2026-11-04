@@ -139,12 +139,12 @@ export default function ReportsPage() {
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Reports & Analytics</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Reports & Analytics</h2>
                         <p className="text-muted-foreground">
                             Analyze your hotel's performance, revenue, and occupancy trends.
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <CalendarDateRangePicker date={dateRange} setDate={handleDateRangeChange} />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -185,7 +185,7 @@ export default function ReportsPage() {
 
                     {/* Revenue Tab */}
                     <TabsContent value="revenue" className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -256,7 +256,7 @@ export default function ReportsPage() {
 
                     {/* Occupancy Tab */}
                     <TabsContent value="occupancy" className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">Avg. Occupancy</CardTitle>
@@ -618,7 +618,7 @@ export default function ReportsPage() {
 
                     {/* Payment Reconciliation Tab */}
                     <TabsContent value="reconciliation" className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                             <Card>
                                 <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Cash</CardTitle></CardHeader>
                                 <CardContent>

@@ -127,7 +127,7 @@ export default function RevenueBreakdown() {
       </CardHeader>
       <CardContent>
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
           {/* Total Revenue */}
           <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
             <div className="flex items-center justify-between mb-2">

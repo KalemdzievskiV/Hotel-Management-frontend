@@ -229,7 +229,7 @@ function Calendar() {
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Calendar</h1>
             <p className="text-gray-600 mt-1">View and manage reservations</p>
           </div>
           <div className="flex gap-2">

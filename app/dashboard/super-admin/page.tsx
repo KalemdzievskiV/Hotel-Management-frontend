@@ -94,14 +94,14 @@ export default function SuperAdminDashboard() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">System Administration</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">System Administration</h1>
           <p className="text-gray-600 mt-1">
             Welcome back, {user?.fullName}! Manage users and hotels.
           </p>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>

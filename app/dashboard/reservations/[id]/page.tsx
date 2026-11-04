@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ReservationStatus, PaymentStatus, PaymentMethod, BookingType, RecordPaymentDto } from '@/types';
+import { enumLabel } from '@/lib/utils';
 import { formatDate, formatDateTime } from '@/lib/utils/date';
 
 export default function ViewReservationPage() {
@@ -166,7 +167,7 @@ export default function ViewReservationPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Reservation #{reservation.id}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reservation #{reservation.id}</h1>
             <p className="mt-1 text-gray-600">{reservation.guestName}</p>
           </div>
           <div className="flex gap-3">
@@ -181,14 +182,14 @@ export default function ViewReservationPage() {
 
         {/* Status Badges & Actions */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(reservation.status)}`}>
-                {ReservationStatus[reservation.status]}
+                {enumLabel(ReservationStatus[reservation.status])}
               </span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentBadge(reservation.paymentStatus)}`}>
-                {PaymentStatus[reservation.paymentStatus]}
+                {enumLabel(PaymentStatus[reservation.paymentStatus])}
               </span>
               {reservation.bookingType === BookingType.ShortStay && (
                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
@@ -197,7 +198,7 @@ export default function ViewReservationPage() {
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {reservation.status === ReservationStatus.Pending && (
                 <Button
                   onClick={handleConfirm}
@@ -526,7 +527,7 @@ export default function ViewReservationPage() {
                   value={paymentData.paymentMethod.toString()}
                   onValueChange={(value) => setPaymentData(prev => ({ ...prev, paymentMethod: parseInt(value) }))}
                 >
-                  <SelectTrigger id="paymentMethod">
+                  <SelectTrigger id="paymentMethod" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

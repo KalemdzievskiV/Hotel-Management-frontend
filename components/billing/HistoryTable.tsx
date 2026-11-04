@@ -1,12 +1,34 @@
 import { SubscriptionEvent } from '@/types';
+import { MobileList, MobileListItem } from '@/components/ui/mobile-list';
 import { eventLabel, formatDate, formatMoney } from './planDisplay';
 
 /**
  * A subscription's history: every trial, payment and change, with who made it and why
  */
 export default function HistoryTable({ history }: { history: SubscriptionEvent[] }) {
+  const details = (event: SubscriptionEvent) =>
+    [event.reason, event.reference && `ref. ${event.reference}`, event.actorName && `by ${event.actorName}`]
+      .filter(Boolean)
+      .join(' · ');
+
   return (
-    <table className="w-full text-left text-sm">
+    <>
+    <MobileList>
+      {history.map((event, i) => (
+        <MobileListItem
+          key={i}
+          title={eventLabel(event)}
+          aside={event.amount ? <span className="text-sm font-medium text-gray-900">{formatMoney(event.amount)}</span> : undefined}
+        >
+          <p>
+            {formatDate(event.createdAt)} · {event.plan}
+            {event.newAccessUntil && <> · until {formatDate(event.newAccessUntil)}</>}
+          </p>
+          {details(event) && <p className="[overflow-wrap:anywhere]">{details(event)}</p>}
+        </MobileListItem>
+      ))}
+    </MobileList>
+    <table className="hidden md:table w-full text-left text-sm">
       <thead className="border-b bg-gray-50 text-gray-600">
         <tr>
           <th className="px-4 py-3 font-medium">Date</th>
@@ -24,9 +46,7 @@ export default function HistoryTable({ history }: { history: SubscriptionEvent[]
               <span className="font-medium text-gray-900">{eventLabel(event)}</span>
               {(event.reason || event.actorName || event.reference) && (
                 <span className="block text-gray-500 [overflow-wrap:anywhere]">
-                  {[event.reason, event.reference && `ref. ${event.reference}`, event.actorName && `by ${event.actorName}`]
-                    .filter(Boolean)
-                    .join(' · ')}
+                  {details(event)}
                 </span>
               )}
             </td>
@@ -37,5 +57,6 @@ export default function HistoryTable({ history }: { history: SubscriptionEvent[]
         ))}
       </tbody>
     </table>
+    </>
   );
 }

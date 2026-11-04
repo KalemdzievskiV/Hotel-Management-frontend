@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { MobileList, MobileListItem } from '@/components/ui/mobile-list';
 import { Pagination } from '@/components/ui/pagination';
 import { usePagination } from '@/hooks/usePagination';
 import {
@@ -96,7 +97,7 @@ export default function GuestsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Guests</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Guests</h1>
             <p className="mt-1 text-gray-600">
               Manage guest information and profiles
             </p>
@@ -109,7 +110,7 @@ export default function GuestsPage() {
 
         {/* Filters */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="search-guests">Search guests</Label>
@@ -124,7 +125,7 @@ export default function GuestsPage() {
               <div>
                 <Label htmlFor="filter-hotel">Filter by hotel</Label>
                 <Select value={selectedHotelId} onValueChange={setSelectedHotelId}>
-                  <SelectTrigger id="filter-hotel">
+                  <SelectTrigger id="filter-hotel" className="w-full">
                     <SelectValue placeholder="All Hotels" />
                   </SelectTrigger>
                   <SelectContent>
@@ -140,7 +141,7 @@ export default function GuestsPage() {
               <div>
                 <Label htmlFor="filter-type">Guest type</Label>
                 <Select value={guestTypeFilter} onValueChange={setGuestTypeFilter}>
-                  <SelectTrigger id="filter-type">
+                  <SelectTrigger id="filter-type" className="w-full">
                     <SelectValue placeholder="All Guests" />
                   </SelectTrigger>
                   <SelectContent>
@@ -163,7 +164,40 @@ export default function GuestsPage() {
             </div>
           ) : filteredGuests && filteredGuests.length > 0 ? (
             <>
-            <div className="overflow-x-auto">
+            <MobileList>
+              {pagedGuests.map((guest) => (
+                <MobileListItem
+                  key={guest.id}
+                  onClick={() => router.push(`/dashboard/guests/${guest.id}`)}
+                  title={<>{guest.firstName} {guest.lastName}{guest.isVIP && <span className="ml-1.5 text-yellow-500" title="VIP">⭐</span>}</>}
+                  aside={
+                    guest.isBlacklisted ? (
+                      <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Blacklisted</Badge>
+                    ) : (
+                      <Badge className={guest.isWalkInGuest ? 'bg-purple-100 text-purple-800 hover:bg-purple-100' : 'bg-blue-100 text-blue-800 hover:bg-blue-100'}>
+                        {guest.isWalkInGuest ? 'Walk-in' : 'Registered'}
+                      </Badge>
+                    )
+                  }
+                  actions={
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/guests/${guest.id}/edit`)}>
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-red-600" onClick={() => setDeleteConfirm(guest.id)}>
+                        Delete
+                      </Button>
+                    </>
+                  }
+                >
+                  {(guest.phoneNumber || guest.email) && (
+                    <p className="break-all">{[guest.phoneNumber, guest.email].filter(Boolean).join(' · ')}</p>
+                  )}
+                  {guest.hotelName && <p>{guest.hotelName}</p>}
+                </MobileListItem>
+              ))}
+            </MobileList>
+            <div className="hidden md:block overflow-x-auto">
               <Table>
               <TableHeader>
                 <TableRow>

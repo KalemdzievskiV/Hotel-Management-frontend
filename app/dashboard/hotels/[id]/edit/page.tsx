@@ -146,7 +146,7 @@ export default function EditHotelPage() {
       <div className="max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Edit Hotel</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Hotel</h1>
           <p className="mt-1 text-gray-600">Update hotel information</p>
         </div>
 
@@ -188,7 +188,7 @@ export default function EditHotelPage() {
                   value={formData.stars?.toString() || '3'} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, stars: parseInt(value) }))}
                 >
-                  <SelectTrigger id="stars">
+                  <SelectTrigger id="stars" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

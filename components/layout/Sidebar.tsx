@@ -12,7 +12,15 @@ interface NavItem {
   permission?: keyof ReturnType<typeof usePermissions>; // Permission required to view
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  /** Closes the phone drawer: from its close button, and once a page is picked */
+  onClose?: () => void;
+}
+
+/** The dashboard home is a redirect, so its real pages count as "Dashboard" too */
+const DASHBOARD_HOMES = ['/dashboard', '/dashboard/admin', '/dashboard/super-admin'];
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const permissions = usePermissions();
@@ -166,26 +174,42 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="flex flex-col w-64 bg-gray-900 min-h-screen">
+    <div className="flex flex-col w-64 max-w-[85vw] bg-gray-900 h-full">
       {/* Logo */}
-      <div className="flex items-center justify-center h-16 bg-gray-800">
-        <Link href="/dashboard" className="flex items-center">
+      <div className="relative flex shrink-0 items-center justify-center h-16 bg-gray-800">
+        <Link href="/dashboard" onClick={onClose} className="flex items-center">
           <span className="text-2xl">🏨</span>
           <span className="ml-2 text-white font-bold text-lg">Hotel Manager</span>
         </Link>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close menu"
+            className="lg:hidden absolute right-2 p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
+      {/* Navigation: scrolls on short screens so every item stays reachable */}
+      <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         {navigationItems.map((item) => {
           if (!canViewItem(item)) return null;
 
-          const isActive = pathname === item.href;
+          // Detail pages (e.g. /dashboard/rooms/12) keep their section highlighted
+          const isActive = item.href === '/dashboard'
+            ? DASHBOARD_HOMES.includes(pathname)
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           return (
             <Link
               key={item.name}
               href={item.href}
+              onClick={onClose}
               className={`
                 flex items-center px-4 py-3 rounded-lg transition-colors
                 ${
@@ -203,7 +227,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User Info at Bottom */}
-      <div className="p-4 bg-gray-800 border-t border-gray-700">
+      <div className="shrink-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gray-800 border-t border-gray-700">
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
             {user?.fullName.charAt(0).toUpperCase()}

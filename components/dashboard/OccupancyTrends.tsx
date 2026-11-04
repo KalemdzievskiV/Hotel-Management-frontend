@@ -96,7 +96,7 @@ export default function OccupancyTrends() {
       </CardHeader>
       <CardContent>
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
           {/* Current Occupancy */}
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div className="text-sm text-blue-600 font-medium mb-1">Current</div>

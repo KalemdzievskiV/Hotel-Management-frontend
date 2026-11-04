@@ -45,7 +45,7 @@ function FilterSelect({ label, value, onChange, allLabel, options }: {
     <div>
       <label className="text-sm font-medium mb-2 block">{label}</label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger>
+        <SelectTrigger className="w-full">
           <SelectValue placeholder={allLabel} />
         </SelectTrigger>
         <SelectContent>
@@ -66,9 +66,9 @@ export default function CalendarToolbar({
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
+      <CardContent className="space-y-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
             <div className="flex gap-2 flex-wrap">
               {VIEW_MODES.filter(view => roomViewsAvailable || !view.perRoom).map(({ mode, label, icon: Icon, className = '' }) => (
                 <Button

@@ -59,7 +59,7 @@ export default function AvailabilityPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             {isGuest ? 'Find Available Rooms' : 'Room Availability'}
           </h1>
           <p className="mt-1 text-gray-600">
@@ -105,7 +105,7 @@ export default function AvailabilityPage() {
                   value={selectedHotelId?.toString() || ''}
                   onValueChange={(value) => setSelectedHotelId(parseInt(value))}
                 >
-                  <SelectTrigger id="hotel">
+                  <SelectTrigger id="hotel" className="w-full">
                     <SelectValue placeholder="Select a hotel to view rooms" />
                   </SelectTrigger>
                   <SelectContent>

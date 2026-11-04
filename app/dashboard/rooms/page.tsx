@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { MobileList, MobileListItem } from '@/components/ui/mobile-list';
 import { Pagination } from '@/components/ui/pagination';
 import { usePagination } from '@/hooks/usePagination';
 import {
@@ -113,6 +114,56 @@ export default function RoomsPage() {
     return statusStyles[status as keyof typeof statusStyles] || 'bg-gray-100 text-gray-800 hover:bg-gray-100';
   };
 
+  /** Status changes and delete, shared by the table and the phone list */
+  const statusMenu = (room: (typeof pagedRooms)[number]) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Available)}>
+          Set Available
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Occupied)}>
+          Set Occupied
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Cleaning)}>
+          Set Cleaning
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Maintenance)}>
+          Set Maintenance
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.OutOfService)}>
+          Set Out of Service
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Reserved)}>
+          Set Reserved
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={() => setDeleteConfirm(room.id)}
+          className="text-red-600"
+        >
+          Delete Room
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const markCleanButton = (room: (typeof pagedRooms)[number]) =>
+    room.status === RoomStatus.Cleaning && (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => handleMarkCleaned(room.id)}
+        className="border-green-300 text-green-700 hover:bg-green-50"
+      >
+        <CheckCircle className="h-3 w-3 mr-1" />
+        Mark Clean
+      </Button>
+    );
+
   if (error) {
     return (
       <DashboardLayout>
@@ -129,7 +180,7 @@ export default function RoomsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Rooms</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Rooms</h1>
             <p className="mt-1 text-gray-600">
               Manage hotel rooms and availability
             </p>
@@ -142,7 +193,7 @@ export default function RoomsPage() {
 
         {/* Filters */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="search-rooms">Search rooms</Label>
@@ -157,7 +208,7 @@ export default function RoomsPage() {
               <div>
                 <Label htmlFor="filter-hotel">Filter by hotel</Label>
                 <Select value={selectedHotelId} onValueChange={setSelectedHotelId}>
-                  <SelectTrigger id="filter-hotel">
+                  <SelectTrigger id="filter-hotel" className="w-full">
                     <SelectValue placeholder="All Hotels" />
                   </SelectTrigger>
                   <SelectContent>
@@ -183,7 +234,35 @@ export default function RoomsPage() {
             </div>
           ) : filteredRooms && filteredRooms.length > 0 ? (
             <>
-            <div className="overflow-x-auto">
+            <MobileList>
+              {pagedRooms.map((room) => (
+                <MobileListItem
+                  key={room.id}
+                  onClick={() => router.push(`/dashboard/rooms/${room.id}`)}
+                  title={`Room ${room.roomNumber}`}
+                  aside={
+                    <Badge className={getStatusBadgeColor(RoomStatusLabels[room.status])}>
+                      {RoomStatusLabels[room.status]}
+                    </Badge>
+                  }
+                  actions={
+                    <>
+                      {markCleanButton(room)}
+                      <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/rooms/${room.id}/edit`)}>
+                        Edit
+                      </Button>
+                      {statusMenu(room)}
+                    </>
+                  }
+                >
+                  <p>{room.hotelName} · Floor {room.floor}</p>
+                  <p>
+                    {RoomTypeLabels[room.type]} · {room.capacity} guest{room.capacity !== 1 ? 's' : ''} · ${room.pricePerNight}/night
+                  </p>
+                </MobileListItem>
+              ))}
+            </MobileList>
+            <div className="hidden md:block overflow-x-auto">
               <Table>
               <TableHeader>
                 <TableRow>
@@ -276,40 +355,7 @@ export default function RoomsPage() {
                           Edit
                         </Button>
                         
-                        {/* Status Dropdown */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Available)}>
-                              Set Available
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Occupied)}>
-                              Set Occupied
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Cleaning)}>
-                              Set Cleaning
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Maintenance)}>
-                              Set Maintenance
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.OutOfService)}>
-                              Set Out of Service
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(room.id, RoomStatus.Reserved)}>
-                              Set Reserved
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => setDeleteConfirm(room.id)}
-                              className="text-red-600"
-                            >
-                              Delete Room
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {statusMenu(room)}
                       </div>
                     </TableCell>
                   </TableRow>

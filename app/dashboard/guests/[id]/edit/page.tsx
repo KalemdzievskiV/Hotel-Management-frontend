@@ -193,7 +193,7 @@ export default function EditGuestPage() {
       <div className="max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Edit Guest</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Guest</h1>
           <p className="mt-1 text-gray-600">Update guest information for {guest?.firstName} {guest?.lastName}</p>
         </div>
 
@@ -264,7 +264,7 @@ export default function EditGuestPage() {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, hotelId: value ? parseInt(value) : undefined }))}
                   disabled={!guest?.isWalkInGuest}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="No specific hotel" />
                   </SelectTrigger>
                   <SelectContent>
@@ -298,7 +298,7 @@ export default function EditGuestPage() {
                   value={formData.gender}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent>
@@ -338,7 +338,7 @@ export default function EditGuestPage() {
                     value={formData.identificationType}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, identificationType: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>

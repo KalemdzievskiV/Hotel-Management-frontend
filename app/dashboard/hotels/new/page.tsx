@@ -112,7 +112,7 @@ function NewHotel() {
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">{welcome ? 'Add your first hotel' : 'Add New Hotel'}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{welcome ? 'Add your first hotel' : 'Add New Hotel'}</h1>
           <p className="mt-1 text-gray-600">Create a new hotel property</p>
         </div>
 
@@ -156,7 +156,7 @@ function NewHotel() {
                     value={formData.stars?.toString() || '3'} 
                     onValueChange={(value) => setFormData(prev => ({ ...prev, stars: parseInt(value) }))}
                   >
-                    <SelectTrigger id="stars">
+                    <SelectTrigger id="stars" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

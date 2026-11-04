@@ -9,6 +9,7 @@ import { hotelsApi } from '@/lib/api/hotels';
 import { billingApi } from '@/lib/api/billing';
 import { getApiErrorMessage } from '@/lib/api/errors';
 import { useToast } from '@/components/ui/Toast';
+import { MobileList, MobileListItem } from '@/components/ui/mobile-list';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -87,6 +88,20 @@ export default function StaffPage() {
   const limit = billing?.limits.maxStaff;
   const atLimit = billing && limit !== null && limit !== undefined && billing.usage.staff >= limit;
 
+  /** Moves a staff member between hotels; only when there's more than one */
+  const hotelPicker = (member: NonNullable<typeof staff>[number]) =>
+    hotels && hotels.length > 1 ? (
+      <Select
+        value={String(member.hotelId)}
+        onValueChange={value => move.mutate({ id: member.id, hotelId: Number(value) })}
+      >
+        <SelectTrigger size="sm" className="w-44" aria-label={`Hotel of ${member.firstName} ${member.lastName}`}><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {hotels.map(hotel => <SelectItem key={hotel.id} value={String(hotel.id)}>{hotel.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    ) : null;
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-5xl space-y-6">
@@ -120,7 +135,40 @@ export default function StaffPage() {
 
         <Card className="py-0">
           <CardContent className="overflow-x-auto p-0">
-            <table className="w-full text-left text-sm">
+            <MobileList>
+              {isLoading && <li className="px-4 py-8 text-center text-gray-500">Loading…</li>}
+              {staff?.length === 0 && (
+                <li className="px-4 py-8 text-center text-gray-500">No staff yet. Add a manager or housekeeper to share the work.</li>
+              )}
+              {staff?.map(member => (
+                <MobileListItem
+                  key={member.id}
+                  title={`${member.firstName} ${member.lastName}`}
+                  aside={
+                    <Badge className={member.isActive ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-100'}>
+                      {member.isActive ? 'Active' : 'Deactivated'}
+                    </Badge>
+                  }
+                  actions={
+                    <>
+                      {hotelPicker(member)}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={setActive.isPending}
+                        onClick={() => setActive.mutate({ id: member.id, active: !member.isActive })}
+                      >
+                        {member.isActive ? 'Deactivate' : 'Reactivate'}
+                      </Button>
+                    </>
+                  }
+                >
+                  <p className="break-all">{member.email}</p>
+                  <p>{member.roles.join(', ')}{!(hotels && hotels.length > 1) && member.hotelName ? ` · ${member.hotelName}` : ''}</p>
+                </MobileListItem>
+              ))}
+            </MobileList>
+            <table className="hidden md:table w-full text-left text-sm">
               <thead className="border-b bg-gray-50 text-gray-600">
                 <tr>
                   <th className="px-4 py-3 font-medium">Name</th>
@@ -145,19 +193,7 @@ export default function StaffPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-700">{member.roles.join(', ')}</td>
                     <td className="px-4 py-3">
-                      {hotels && hotels.length > 1 ? (
-                        <Select
-                          value={String(member.hotelId)}
-                          onValueChange={value => move.mutate({ id: member.id, hotelId: Number(value) })}
-                        >
-                          <SelectTrigger className="w-44" aria-label={`Hotel of ${member.firstName} ${member.lastName}`}><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {hotels.map(hotel => <SelectItem key={hotel.id} value={String(hotel.id)}>{hotel.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <span className="text-gray-700">{member.hotelName}</span>
-                      )}
+                      {hotelPicker(member) ?? <span className="text-gray-700">{member.hotelName}</span>}
                     </td>
                     <td className="px-4 py-3">
                       <Badge className={member.isActive ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-100'}>

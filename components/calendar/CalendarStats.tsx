@@ -17,13 +17,14 @@ function StatCard({ label, value, valueClassName = '', icon }: {
 }) {
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div>
+      <CardContent>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
             <p className="text-sm text-gray-600">{label}</p>
-            <p className={`text-2xl font-bold ${valueClassName}`}>{value}</p>
+            <p className={`text-xl sm:text-2xl font-bold ${valueClassName}`}>{value}</p>
           </div>
-          {icon}
+          {/* Two cards share a row on phones; the label needs the room more */}
+          <div className="hidden sm:block shrink-0">{icon}</div>
         </div>
       </CardContent>
     </Card>
@@ -40,7 +41,7 @@ function CircleIcon({ symbol, className }: { symbol: string; className: string }
 
 export default function CalendarStats({ stats }: { stats: CalendarStatsData }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
       <StatCard label="Total Reservations" value={stats.total} icon={<BarChart3 className="h-8 w-8 text-blue-600" />} />
       <StatCard label="Checking In Today" value={stats.checkingIn} valueClassName="text-green-600"
         icon={<CircleIcon symbol="→" className="bg-green-100" />} />
