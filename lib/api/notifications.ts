@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import apiClient from './client';
 
 export const notificationsApi = {
@@ -14,6 +15,16 @@ export const notificationsApi = {
   // POST /api/Notifications/web-push - links this browser to the signed-in user
   registerWebPush: async (subscription: PushSubscriptionJSON, timeZone: string): Promise<void> => {
     await apiClient.post('/Notifications/web-push', { ...subscription, timeZone });
+  },
+
+  // POST /api/Notifications/web-push/test - pushes to this browser now; throws the server's reason on failure
+  sendTestWebPush: async (endpoint: string): Promise<void> => {
+    try {
+      await apiClient.post('/Notifications/web-push/test', { endpoint });
+    } catch (error) {
+      const message = isAxiosError<{ message?: string }>(error) ? error.response?.data?.message : undefined;
+      throw new Error(message ?? 'Could not send a test notification');
+    }
   },
 
   // DELETE /api/Notifications/web-push

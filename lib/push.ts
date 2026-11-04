@@ -1,8 +1,8 @@
 import { notificationsApi } from '@/lib/api/notifications';
 
 /**
- * Browser push for the web app. For now the server only sends check-in / check-out reminders
- * this way. On iPhone it works only once the site is added to the Home Screen and opened from
+ * Browser push for the web app. For now the server only sends new online bookings and
+ * check-in / check-out reminders this way. On iPhone it works only once the site is added to the Home Screen and opened from
  * there; it then keeps working when the app is closed.
  */
 export type WebPushState = 'loading' | 'unsupported' | 'needs-install' | 'denied' | 'off' | 'on';
@@ -75,6 +75,13 @@ export async function disableWebPush(): Promise<WebPushState> {
     await subscription.unsubscribe();
   }
   return 'off';
+}
+
+/** Asks the server to push to this browser now; throws with the reason when it can't */
+export async function sendTestWebPush(): Promise<void> {
+  const subscription = await currentSubscription();
+  if (!subscription) throw new Error('Notifications are off on this device');
+  await notificationsApi.sendTestWebPush(subscription.endpoint);
 }
 
 /** On every dashboard load: keeps this browser linked to whoever is signed in now */
