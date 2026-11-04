@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { useCreateReservation, useUpdateReservation } from '@/hooks/useReservations';
 import { useHotels } from '@/hooks/useHotels';
@@ -204,7 +204,19 @@ function ReservationDialogBody({
     if (closeDialog) onOpenChange(false);
   });
 
+  // Blocks a second tap before React re-renders with the button disabled
+  const submitting = useRef(false);
   const handleSubmit = async () => {
+    if (submitting.current) return;
+    submitting.current = true;
+    try {
+      await submit();
+    } finally {
+      submitting.current = false;
+    }
+  };
+
+  const submit = async () => {
     const walkIn = isWalkIn && mode === 'create';
     const validationErrors = validateReservationForm({
       formData,
@@ -259,7 +271,8 @@ function ReservationDialogBody({
     }
   };
 
-  const saving = createReservation.isPending || updateReservation.isPending;
+  // Includes creating the walk-in guest, which happens before the reservation
+  const saving = createReservation.isPending || updateReservation.isPending || createGuest.isPending;
   const showForm = mode === 'create' || mode === 'edit' || isEditing;
   const selfName = myGuestProfile ? `${myGuestProfile.firstName} ${myGuestProfile.lastName}` : user?.fullName ?? '';
 
@@ -285,6 +298,7 @@ function ReservationDialogBody({
               status={existing.status}
               canManage={!isGuest}
               isEditing={isEditing}
+              busy={actions.busy}
               onEdit={() => setIsEditing(true)}
               onConfirm={actions.confirm}
               onCheckIn={actions.checkIn}
@@ -374,7 +388,7 @@ function ReservationDialogBody({
         <DialogFooter className="flex justify-between items-center">
           <div className="flex gap-2">
             {mode === 'view' && !isEditing && existing && canDeleteReservations && existing.status === ReservationStatus.Pending && (
-              <Button variant="ghost" size="sm" onClick={actions.remove} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+              <Button variant="ghost" size="sm" onClick={actions.remove} disabled={actions.busy} className="text-red-600 hover:text-red-700 hover:bg-red-50">
                 Delete Permanently
               </Button>
             )}

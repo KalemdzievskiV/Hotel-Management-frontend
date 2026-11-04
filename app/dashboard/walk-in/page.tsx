@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { walkInApi, QuickCheckInDto, QuickGuestDto, GuestIntelligenceDto } from '@/lib/api/walk-in';
 import { hotelsApi } from '@/lib/api/hotels';
@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getApiErrorMessage } from '@/lib/api/errors';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/Toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -101,10 +102,20 @@ export default function WalkInPage() {
         select: (data) => data.filter((r: any) => r.status === ReservationStatus.CheckedIn),
     });
 
+    const { showToast } = useToast();
+    const successRef = useRef<HTMLDivElement>(null);
+
+    /** On a phone the button is far down the page: bring the result into view */
+    const showSuccess = (message: string) => {
+        setSuccessMessage(message);
+        showToast(message.replace(/^✅\s*/, ''), 'success');
+        requestAnimationFrame(() => successRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+    };
+
     const quickCheckIn = useMutation({
         mutationFn: (dto: QuickCheckInDto) => walkInApi.quickCheckIn(dto),
         onSuccess: (result) => {
-            setSuccessMessage(`✅ Room ${selectedRoom?.roomNumber} checked in for ${result.guestName}`);
+            showSuccess(`✅ Room ${selectedRoom?.roomNumber} checked in for ${result.guestName}`);
             queryClient.invalidateQueries({ queryKey: ['checked-in', hotelId] });
             queryClient.invalidateQueries({ queryKey: ['available-rooms', hotelId] });
             setStep('guest');
@@ -123,7 +134,7 @@ export default function WalkInPage() {
     const expressCheckout = useMutation({
         mutationFn: ({ id, dto }: { id: number; dto: any }) => walkInApi.expressCheckOut(id, dto),
         onSuccess: (result) => {
-            setSuccessMessage(`✅ Room ${result.roomNumber} checked out`);
+            showSuccess(`✅ Room ${result.roomNumber} checked out`);
             closeExpressCheckout();
             queryClient.invalidateQueries({ queryKey: ['checked-in', hotelId] });
             queryClient.invalidateQueries({ queryKey: ['available-rooms', hotelId] });
@@ -157,8 +168,10 @@ export default function WalkInPage() {
     const subtotal = basePrice * nights;
     const finalTotal = Math.max(0, subtotal - discountAmount);
 
+    // isPending only disables the button after a re-render; this stops a fast second tap
+    const checkInSent = useRef(false);
     const handleQuickCheckIn = () => {
-        if (!hotelId || !selectedRoom) return;
+        if (!hotelId || !selectedRoom || checkInSent.current) return;
         const dto: QuickCheckInDto = {
             hotelId,
             roomId: selectedRoom.id,
@@ -175,7 +188,8 @@ export default function WalkInPage() {
             paymentMethod,
             specialRequests: specialRequests || undefined,
         };
-        quickCheckIn.mutate(dto);
+        checkInSent.current = true;
+        quickCheckIn.mutate(dto, { onSettled: () => { checkInSent.current = false; } });
     };
 
     return (
@@ -201,7 +215,7 @@ export default function WalkInPage() {
                 </div>
 
                 {successMessage && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 font-medium flex items-center justify-between">
+                    <div ref={successRef} className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 font-medium flex items-center justify-between">
                         <span>{successMessage}</span>
                         <button onClick={() => setSuccessMessage('')} className="text-green-600 hover:text-green-800">✕</button>
                     </div>

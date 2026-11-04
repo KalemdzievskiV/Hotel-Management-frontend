@@ -50,6 +50,7 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -64,6 +65,11 @@ function DialogContent({
           className
         )}
         {...props}
+        onInteractOutside={(event) => {
+          // Dismissing an alert shouldn't also close the dialog (and lose what was typed)
+          if ((event.target as Element | null)?.closest?.("[data-toast-region]")) event.preventDefault()
+          onInteractOutside?.(event)
+        }}
       >
         {children}
         {showCloseButton && (

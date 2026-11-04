@@ -52,14 +52,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
+      {/* Toast Container: above dialogs (z-50), and tappable while one is open (Radix turns
+          off pointer events outside the dialog). Full width at the top on phones. */}
+      <div
+        role="status"
+        aria-live="polite"
+        data-toast-region
+        className="pointer-events-none fixed inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-[100] flex flex-col items-stretch gap-2 sm:inset-x-auto sm:right-4 sm:items-end"
+      >
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={`
-              px-6 py-3 rounded-lg shadow-lg min-w-[300px] max-w-md
-              animate-in slide-in-from-right duration-200
+              pointer-events-auto px-4 py-3 sm:px-6 rounded-lg shadow-lg w-full sm:w-auto sm:min-w-[300px] max-w-md
+              animate-in slide-in-from-top sm:slide-in-from-right duration-200
               ${getToastStyles(toast.type)}
             `}
           >
@@ -67,7 +73,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <p className="text-sm font-medium">{toast.message}</p>
               <button
                 onClick={() => removeToast(toast.id)}
-                className="text-white hover:text-gray-200"
+                aria-label="Dismiss"
+                className="-m-2 p-2 text-white hover:text-gray-200"
               >
                 ✕
               </button>
