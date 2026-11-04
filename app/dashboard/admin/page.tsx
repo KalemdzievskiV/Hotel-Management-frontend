@@ -1,5 +1,6 @@
 'use client';
 
+import { parseStayDate } from '@/lib/utils/date';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -73,8 +74,9 @@ export default function AdminDashboard() {
 
   // Calculate monthly stats
   const monthlyStats = reservationsList?.reduce((acc: Record<string, number>, res: any) => {
-    const month = new Date(res.checkInDate).getMonth() + 1;
-    const year = new Date(res.checkInDate).getFullYear();
+    const checkIn = parseStayDate(res.checkInDate);
+    const month = checkIn.getMonth() + 1;
+    const year = checkIn.getFullYear();
     if (year === new Date().getFullYear()) {
       acc[month.toString()] = (acc[month.toString()] || 0) + 1;
     }

@@ -18,6 +18,7 @@ import {
 import { format } from 'date-fns';
 import { Reservation, ReservationStatus } from '@/types';
 import { useToast } from '@/components/ui/Toast';
+import { parseStayDate } from '@/lib/utils/date';
 
 export default function TodaysActivity() {
   const { data: checkIns, isLoading: loadingCheckIns, refetch: refetchCheckIns } = useTodaysCheckIns();
@@ -75,7 +76,7 @@ export default function TodaysActivity() {
 
   const formatTime = (dateString: string | Date) => {
     try {
-      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+      const date = parseStayDate(dateString);
       return format(date, 'h:mm a');
     } catch {
       return 'N/A';

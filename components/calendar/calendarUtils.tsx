@@ -1,6 +1,9 @@
 import { Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { BookingType, Reservation, ReservationStatus } from '@/types';
+import { parseStayDate } from '@/lib/utils/date';
+
+export { parseStayDate };
 
 export type ViewMode = 'month' | 'week' | 'day' | 'timeline' | 'list';
 
@@ -35,18 +38,6 @@ export function ShortStayIcon({ bookingType }: { bookingType: BookingType }) {
       <Clock className="h-3 w-3 text-purple-600" />
     </span>
   );
-}
-
-/**
- * Stay dates are hotel wall-clock values, so read the date/time digits as-is instead of letting
- * the browser shift them into its own time zone (which moved stays to the wrong day or hour).
- */
-export function parseStayDate(value: string | Date): Date {
-  if (value instanceof Date) return value;
-  const [datePart, timePart = '00:00'] = value.split('T');
-  const [year, month, day] = datePart.split('-').map(Number);
-  const [hours, minutes] = timePart.split(':').map(Number);
-  return new Date(year, month - 1, day, hours || 0, minutes || 0);
 }
 
 export function formatStayTime(value: string | Date): string {

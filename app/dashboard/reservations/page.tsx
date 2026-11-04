@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/select';
 import { Reservation, ReservationStatus, PaymentStatus } from '@/types';
 import { enumLabel } from '@/lib/utils';
-import { formatDate } from '@/lib/utils/date';
+import { formatStay } from '@/lib/utils/date';
 
 export default function ReservationsPage() {
   const router = useRouter();
@@ -322,7 +322,7 @@ export default function ReservationsPage() {
                   actions={rowActions(reservation)}
                 >
                   <p>{reservation.hotelName} · Room {reservation.roomNumber}</p>
-                  <p>{formatDate(reservation.checkInDate)} – {formatDate(reservation.checkOutDate)}</p>
+                  <p>{formatStay(reservation.checkInDate)} – {formatStay(reservation.checkOutDate)}</p>
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="font-medium text-gray-900">${reservation.totalAmount}</span>
                     <Badge className={getPaymentBadge(reservation.paymentStatus)}>
@@ -374,8 +374,8 @@ export default function ReservationsPage() {
                         <div className="text-sm text-gray-500">Room {reservation.roomNumber}</div>
                     </TableCell>
                     <TableCell>
-                        <div className="text-sm text-gray-900">{formatDate(reservation.checkInDate)}</div>
-                        <div className="text-sm text-gray-500">to {formatDate(reservation.checkOutDate)}</div>
+                        <div className="text-sm text-gray-900">{formatStay(reservation.checkInDate)}</div>
+                        <div className="text-sm text-gray-500">to {formatStay(reservation.checkOutDate)}</div>
                     </TableCell>
                     <TableCell>
                         <div className="text-sm font-medium text-gray-900">${reservation.totalAmount}</div>

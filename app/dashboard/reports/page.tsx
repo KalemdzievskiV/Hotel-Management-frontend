@@ -33,6 +33,7 @@ import {
 } from 'recharts';
 import { Download, TrendingUp, DollarSign, Activity, AlertTriangle, XCircle } from 'lucide-react';
 import { format, subDays } from 'date-fns';
+import { parseStayDate } from '@/lib/utils/date';
 
 export default function ReportsPage() {
     const [dateRange, setDateRange] = useState({
@@ -377,7 +378,7 @@ export default function ReportsPage() {
                                                     <tr key={p.reservationId} className="border-t hover:bg-muted/50">
                                                         <td className="p-4 font-medium">{p.guestName}</td>
                                                         <td className="p-4">{p.roomNumber}</td>
-                                                        <td className="p-4">{format(new Date(p.checkInDate), 'MMM dd')} – {format(new Date(p.checkOutDate), 'MMM dd')}</td>
+                                                        <td className="p-4">{format(parseStayDate(p.checkInDate), 'MMM dd')} – {format(parseStayDate(p.checkOutDate), 'MMM dd')}</td>
                                                         <td className="p-4">{formatCurrency(p.totalAmount)}</td>
                                                         <td className="p-4 text-green-600">{formatCurrency(p.paidAmount)}</td>
                                                         <td className="p-4 text-red-600 font-bold">{formatCurrency(p.remainingAmount)}</td>
@@ -605,7 +606,7 @@ export default function ReportsPage() {
                                                     <td className="p-4 text-muted-foreground">#{n.reservationId}</td>
                                                     <td className="p-4 font-medium">{n.guestName}</td>
                                                     <td className="p-4">{n.roomNumber}</td>
-                                                    <td className="p-4">{format(new Date(n.checkInDate), 'MMM dd, yyyy')}</td>
+                                                    <td className="p-4">{format(parseStayDate(n.checkInDate), 'MMM dd, yyyy')}</td>
                                                     <td className="p-4 font-medium">{formatCurrency(n.totalAmount)}</td>
                                                 </tr>
                                             ))}

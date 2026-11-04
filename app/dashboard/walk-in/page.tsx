@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { format, addDays, differenceInCalendarDays } from 'date-fns';
 import { PaymentMethod, PaymentMethodLabels, ReservationStatus } from '@/types/enums';
+import { parseStayDate } from '@/lib/utils/date';
 
 // Money is taken at the desk, so "Pay on Arrival" isn't offered
 const PAYMENT_METHODS = [
@@ -517,7 +518,7 @@ export default function WalkInPage() {
                                                 <div>
                                                     <p className="font-medium text-sm">Room {r.roomNumber}</p>
                                                     <p className="text-xs text-gray-500">{r.guestName}</p>
-                                                    <p className="text-xs text-gray-400">Out: {format(new Date(r.checkOutDate), 'MMM d')}</p>
+                                                    <p className="text-xs text-gray-400">Out: {format(parseStayDate(r.checkOutDate), 'MMM d')}</p>
                                                 </div>
                                                 <Button
                                                     size="sm"
@@ -576,7 +577,7 @@ export default function WalkInPage() {
                                         {guestIntelligence.recentStays.map(s => (
                                             <div key={s.reservationId} className="text-xs flex justify-between bg-gray-50 rounded p-2">
                                                 <span>Room {s.roomNumber} ({s.roomType})</span>
-                                                <span>{format(new Date(s.checkInDate), 'MMM d')} → {format(new Date(s.checkOutDate), 'MMM d, yyyy')}</span>
+                                                <span>{format(parseStayDate(s.checkInDate), 'MMM d')} → {format(parseStayDate(s.checkOutDate), 'MMM d, yyyy')}</span>
                                                 <span className="font-medium">${s.totalAmount}</span>
                                             </div>
                                         ))}

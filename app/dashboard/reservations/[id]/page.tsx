@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select';
 import { ReservationStatus, PaymentStatus, PaymentMethod, BookingType, RecordPaymentDto } from '@/types';
 import { enumLabel } from '@/lib/utils';
-import { formatDate, formatDateTime } from '@/lib/utils/date';
+import { formatDate, formatDateTime, formatStay } from '@/lib/utils/date';
 
 export default function ViewReservationPage() {
   const router = useRouter();
@@ -270,12 +270,12 @@ export default function ViewReservationPage() {
 
             <div>
               <Label className="text-gray-500">Check-in</Label>
-              <p className="text-gray-900">{formatDate(reservation.checkInDate)}</p>
+              <p className="text-gray-900">{formatStay(reservation.checkInDate, reservation.bookingType === BookingType.ShortStay ? 'MMM dd, yyyy HH:mm' : 'MMM dd, yyyy')}</p>
             </div>
 
             <div>
               <Label className="text-gray-500">Check-out</Label>
-              <p className="text-gray-900">{formatDate(reservation.checkOutDate)}</p>
+              <p className="text-gray-900">{formatStay(reservation.checkOutDate, reservation.bookingType === BookingType.ShortStay ? 'MMM dd, yyyy HH:mm' : 'MMM dd, yyyy')}</p>
             </div>
 
             {reservation.totalNights && (
